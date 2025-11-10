@@ -1,6 +1,13 @@
 #!/usr/bin/env ruby
 
+require 'bundler/setup'
+Bundler.require(:default)
+
+# require 'playwright_llm'
+
 require 'readline'
+require 'logger'
+require 'dotenv/load'
 
 puts "Playwright Chat CLI"
 puts "Type your message, press Enter on an empty line to send."
@@ -16,6 +23,7 @@ end
 
 logger = Logger.new(STDOUT)
 logger.formatter = LogFormatter.new
+logger.level = Logger::DEBUG
 
 RubyLLM.configure do |config|
   config.openrouter_api_key = ENV['OPENROUTER_API_KEY']
@@ -41,6 +49,7 @@ def fix_tool_call(tool_call, logger)
   logger.debug "\n[Tool Call] #{tool_call.name}"
   logger.debug "    with params #{tool_call.arguments}\n"
 
+  # Gemini tends to mess up with the tool names by replacing '--' with '__'
   if tool_call.name =~ /^tools__/
     logger.debug "Renaming tool call from #{tool_call.name} to #{tool_call.name.gsub('tools__', 'tools--')}"
     tool_call.name.gsub!('tools__', 'tools--')
@@ -55,7 +64,7 @@ chat = RubyLLM::Chat.new(model:, provider:)
             .with_tools(*tools)
             .on_tool_call { |tool_call| fix_tool_call(tool_call, logger) }
 
-browser_tool = Tools::PlaywrightOpen.new
+browser_tool = PlaywrightLlm::Browser.new(logger: logger)
 logger.debug browser_tool.execute()
 
 loop do

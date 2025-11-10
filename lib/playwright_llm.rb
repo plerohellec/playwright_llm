@@ -1,10 +1,18 @@
 # frozen_string_literal: true
 
-require_relative "playwright_llm/version"
+require "ruby_llm"
 
-module Playwright
-  module Llm
-    class Error < StandardError; end
-    # Your code goes here...
+module PlaywrightLlm
+  class Error < StandardError; end
+
+  module Tools
   end
 end
+
+require_relative "playwright_llm/version"
+require_relative "playwright_llm/browser"
+require_relative "playwright_llm/tools/click"
+require_relative "playwright_llm/tools/executor"
+require_relative "playwright_llm/tools/full_html"
+require_relative "playwright_llm/tools/navigate"
+require_relative "playwright_llm/tools/slim_html"

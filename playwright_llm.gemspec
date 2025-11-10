@@ -4,7 +4,7 @@ require_relative "lib/playwright_llm/version"
 
 Gem::Specification.new do |spec|
   spec.name = "playwright_llm"
-  spec.version = Playwright::Llm::VERSION
+  spec.version = PlaywrightLlm::VERSION
   spec.authors = ["Philippe Le Rohellec"]
   spec.email = ["philippe@lerohellec.com"]
 
@@ -27,12 +27,12 @@ Gem::Specification.new do |spec|
         f.start_with?(*%w[bin/ Gemfile .gitignore])
     end
   end
-  spec.bindir = "exe"
-  spec.executables = spec.files.grep(%r{\Aexe/}) { |f| File.basename(f) }
+  spec.bindir = "bin"
+  spec.executables = spec.files.grep(%r{\Abin/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
 
   # Uncomment to register a new dependency of your gem
-  spec.add_dependency "ruby_llm", "~> 1.0"
+  spec.add_dependency "ruby_llm", "~> 1.9.0"
 
   spec.add_development_dependency "dotenv"
 end
