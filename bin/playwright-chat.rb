@@ -101,7 +101,7 @@ loop do
       puts "\n"
       input_tokens = response.input_tokens   # Tokens in the prompt sent TO the model
       output_tokens = response.output_tokens # Tokens in the response FROM the model
-      cached_tokens = response.try(:cached_tokens) # Tokens served from the provider's prompt cache (if supported) - v1.9.0+
+      cached_tokens = response.cached_tokens # Tokens served from the provider's prompt cache (if supported) - v1.9.0+
 
       logger.debug "Input Tokens: #{input_tokens}"
       logger.debug "Output Tokens: #{output_tokens}"
