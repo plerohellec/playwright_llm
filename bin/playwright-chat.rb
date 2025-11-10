@@ -23,7 +23,7 @@ end
 
 logger = Logger.new(STDOUT)
 logger.formatter = LogFormatter.new
-logger.level = Logger::DEBUG
+logger.level = Logger::INFO
 
 RubyLLM.configure do |config|
   config.openrouter_api_key = ENV['OPENROUTER_API_KEY']

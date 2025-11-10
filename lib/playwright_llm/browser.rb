@@ -44,6 +44,7 @@ class PlaywrightLlm::Browser
     if status_code
       { "browser_pid": @wait_thr.pid, "status_code": status_code }
     else
+      @logger.error "No status code received from browser process. Output: #{output} #{stderr.read}"
       # If process finished without status, check exit status
       close
       begin
