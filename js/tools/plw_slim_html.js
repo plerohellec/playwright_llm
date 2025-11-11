@@ -1,5 +1,5 @@
-import { chromium } from 'playwright';
-import { cleanHtml, trimWhitespaces, paginateHtml } from '../slim_html.js';
+const { chromium } = require('playwright');
+const { cleanHtml, trimWhitespaces, paginateHtml } = require('../slim_html.js');
 
 async function slimHtml() {
   const pageNumber = parseInt(process.argv[2]) || 1;

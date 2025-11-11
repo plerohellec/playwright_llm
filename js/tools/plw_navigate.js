@@ -1,5 +1,5 @@
-import { chromium } from 'playwright';
-import { addVpsbIds } from '../slim_html.js';
+const { chromium } = require('playwright');
+const { addVpsbIds } = require('../slim_html.js');
 
 async function navigate() {
   const url = process.argv[2];

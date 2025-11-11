@@ -1,4 +1,4 @@
-export const cleanHtml = () => {
+const cleanHtml = () => {
 
   const doc = document.documentElement.cloneNode(true);
 
@@ -42,14 +42,14 @@ export const cleanHtml = () => {
   return doc.outerHTML;
 };
 
-export const trimWhitespaces = (html) => {
+const trimWhitespaces = (html) => {
   // Remove trailing whitespaces and consecutive blank lines, keeping max 1 blank line
   return html
     .replace(/[ \t]+$/gm, '')  // remove trailing spaces and tabs from each line
     .replace(/\n{3,}/g, '\n\n');  // remove consecutive blank lines
 };
 
-export const paginateHtml = (html, requestedPage) => {
+const paginateHtml = (html, requestedPage) => {
   const pageSize = 80000;
   const pages = [];
   console.log('html length:', html.length);
@@ -59,7 +59,7 @@ export const paginateHtml = (html, requestedPage) => {
   return pages[requestedPage - 1] || '';
 };
 
-export const addVpsbIds = () => {
+const addVpsbIds = () => {
   const targetElements = ['section', 'div', 'table', 'form', 'a', 'ul', 'input', 'h1', 'h2', 'h3', 'button', 'svg'];
   let idCounter = 0;
 
@@ -74,3 +74,5 @@ export const addVpsbIds = () => {
   });
   console.log(`Added vpsb-ids to ${idCounter} elements`);
 };
+
+module.exports = { cleanHtml, trimWhitespaces, paginateHtml, addVpsbIds };

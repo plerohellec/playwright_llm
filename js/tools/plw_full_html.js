@@ -1,4 +1,4 @@
-import { chromium } from 'playwright';
+const { chromium } = require('playwright');
 
 async function extractFullHtml() {
   const selector = process.argv[2];

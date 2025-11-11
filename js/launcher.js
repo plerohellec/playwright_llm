@@ -1,4 +1,4 @@
-import { chromium } from 'playwright';
+const { chromium } = require('playwright');
 
 (async () => {
   // Launch browser normally (not as server) to keep state persistent
