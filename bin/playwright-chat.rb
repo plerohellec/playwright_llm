@@ -45,27 +45,8 @@ model = 'google/gemini-2.5-flash-preview-09-2025'
 
 streaming = false
 
-def fix_tool_call(tool_call, logger)
-  logger.debug "\n[Tool Call] #{tool_call.name}"
-  logger.debug "    with params #{tool_call.arguments}\n"
-
-  # Gemini tends to mess up with the tool names by replacing '--' with '__'
-  if tool_call.name =~ /^tools__/
-    logger.debug "Renaming tool call from #{tool_call.name} to #{tool_call.name.gsub('tools__', 'tools--')}"
-    tool_call.name.gsub!('tools__', 'tools--')
-  end
-end
-
-tools = [ PlaywrightLlm::Tools::Navigate,
-          PlaywrightLlm::Tools::SlimHtml,
-          PlaywrightLlm::Tools::Click,
-          PlaywrightLlm::Tools::FullHtml ]
-chat = RubyLLM::Chat.new(model:, provider:)
-            .with_tools(*tools)
-            .on_tool_call { |tool_call| fix_tool_call(tool_call, logger) }
-
-browser_tool = PlaywrightLlm::Browser.new(logger: logger)
-logger.debug browser_tool.execute()
+agent = PlaywrightLlm::Agent.new(logger: logger, provider: provider, model: model)
+agent.start
 
 loop do
   lines = []
@@ -89,14 +70,14 @@ loop do
   begin
     if streaming
       response = ""
-      chat.ask(input) do |chunk|
+      agent.ask(input) do |chunk|
         if chunk.content
           print chunk.content
           response += chunk.content
         end
       end
     else
-      response = chat.ask(input)
+      response = agent.ask(input)
       puts response.content
       puts "\n"
       input_tokens = response.input_tokens   # Tokens in the prompt sent TO the model
@@ -125,5 +106,5 @@ loop do
 end
 
 puts "Goodbye!"
-browser_tool.close
+agent.close
 
