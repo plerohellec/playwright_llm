@@ -35,4 +35,5 @@ Gem::Specification.new do |spec|
   spec.add_dependency "ruby_llm", "~> 1.9.0"
 
   spec.add_development_dependency "dotenv"
+  spec.add_development_dependency "debug"
 end

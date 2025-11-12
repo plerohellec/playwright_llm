@@ -20,7 +20,7 @@ class PlaywrightLlm::Browser
     status_code = nil
 
     begin
-      Timeout.timeout(30) do  # wait up to 30 seconds for the response
+      Timeout.timeout(15) do  # wait up to 15 seconds for the response
         while line = stdout.gets
           output += line
           if output.include?('status_code')
@@ -29,6 +29,7 @@ class PlaywrightLlm::Browser
               status_code = data['status_code']
               break
             rescue JSON::ParserError
+              @logger.warn "Received incomplete JSON from browser process, waiting for more data..."
               # continue reading if not complete JSON
             end
           end
@@ -42,7 +43,7 @@ class PlaywrightLlm::Browser
 
     # If we got the status code, return it
     if status_code
-      { "browser_pid": @wait_thr.pid, "status_code": status_code }
+      return { success: true, browser_pid: @wait_thr.pid, status_code: status_code }
     else
       @logger.error "No status code received from browser process. Output: #{output} #{stderr.read}"
       # If process finished without status, check exit status

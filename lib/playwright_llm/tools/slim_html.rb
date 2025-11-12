@@ -25,7 +25,7 @@ class PlaywrightLlm::Tools::SlimHtml < RubyLLM::Tool
         { error: "Script execution failed with exit code #{exit_status}: #{output}" }
       end
     rescue => e
-      puts "Failed to execute script: #{e.class} - #{e.message}"
+      RubyLLM.logger.error "Failed to execute script: #{e.class} - #{e.message}"
       { error: "Failed to execute script: #{e.message}" }
     end
   end

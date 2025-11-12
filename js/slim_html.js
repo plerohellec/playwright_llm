@@ -1,15 +1,44 @@
 const cleanHtml = () => {
+  // const markHiddenElements = () => {
+  //   const hiddenEls = new Set();
+  //   document.querySelectorAll('*').forEach(el => {
+  //     if (el.offsetWidth === 0 && el.offsetHeight === 0) {
+  //       hiddenEls.add(el);
+  //     }
+  //   });
+
+  //   document.querySelectorAll('a, button').forEach(el => {
+  //     let current = el;
+  //     let isHidden = false;
+  //     while (current) {
+  //       if (hiddenEls.has(current)) {
+  //         isHidden = true;
+  //         break;
+  //       }
+  //       current = current.parentElement;
+  //     }
+  //     if (isHidden) {
+  //       el.setAttribute('data-temp-hidden', 'true');
+  //     }
+  //   });
+  // };
+
+  // markHiddenElements();
 
   const doc = document.documentElement.cloneNode(true);
+
+  // Set disabled on hidden elements in the clone
+  // doc.querySelectorAll('[data-temp-hidden]').forEach(el => {
+  //   el.disabled = true;
+  // });
 
   // Remove all script, style, link, br, and svg elements
   doc.querySelectorAll('script, noscript, style, link, br, svg').forEach(el => el.remove());
 
-  // Function to remove attributes except id, class, and action
   function cleanAttributes(element) {
     const attrs = Array.from(element.attributes);
     attrs.forEach(attr => {
-      const keepAttrs = ['id', 'action', 'href', 'role', 'aria-label', 'aria-hidden', 'aria-pressed', 'aria-checked', 'aria-selected', 'vpsb-id'];
+      const keepAttrs = ['id', 'action', 'href', 'role', 'aria-label', 'aria-hidden', 'aria-pressed', 'aria-checked', 'aria-selected', 'disabled'];
       if (!keepAttrs.includes(attr.name)) {
         element.removeAttribute(attr.name);
       }

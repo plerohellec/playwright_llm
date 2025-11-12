@@ -6,6 +6,7 @@ Bundler.require(:default)
 require 'optparse'
 require 'logger'
 require 'dotenv/load'
+require 'debug'
 
 class LogFormatter
   TIME_FORMAT = '%H:%M:%S'
@@ -51,10 +52,11 @@ RubyLLM.configure do |config|
   config.logger = logger
 end
 
-agent = PlaywrightLlm::Agent.new(logger: logger, provider: provider, model: model)
-agent.start
-
 begin
+  agent = PlaywrightLlm::Agent.new(logger: logger, provider: provider, model: model)
+  res = agent.start
+  puts "Agent started with provider=#{provider}, model=#{model}"
+
   response = agent.ask(prompt)
   puts response.content
   puts "\n"
@@ -66,6 +68,9 @@ begin
   logger.debug "Output Tokens: #{output_tokens}"
   logger.debug "Cached Prompt Tokens: #{cached_tokens}" if cached_tokens
   logger.debug "Total Tokens for this turn: #{input_tokens + output_tokens}."
+
+rescue Interrupt
+  puts "\nExecution interrupted by user."
 rescue => e
   logger.error "Error: #{e.class} - #{e.message}"
 

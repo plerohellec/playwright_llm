@@ -31,6 +31,20 @@ async function click() {
       process.exit(1);
     }
 
+    // Check if the selector is visible
+    if (!(await element.isVisible())) {
+      console.error(`Selector "${selector}" is not visible on the page`);
+      await browser.close();
+      process.exit(1);
+    }
+
+    // Check if the selector is enabled
+    if (!(await element.isEnabled())) {
+      console.error(`Selector "${selector}" is not enabled on the page`);
+      await browser.close();
+      process.exit(1);
+    }
+
     // Click the selector and wait for the page to settle
     await page.click(selector, { timeout: 2000 })
     await page.waitForLoadState('networkidle');

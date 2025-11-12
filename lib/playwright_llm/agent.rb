@@ -12,7 +12,9 @@ module PlaywrightLlm
 
     def start
       @browser_tool = PlaywrightLlm::Browser.new(logger: @logger)
-      @logger.debug @browser_tool.execute()
+      res = @browser_tool.execute()
+      @logger.debug "Browser tool execution result: #{res.inspect}"
+      raise PlaywrightLlm::BrowserLaunchError, "Failed to start browser tool" unless res[:success]
 
       tools = [ PlaywrightLlm::Tools::Navigate,
                 PlaywrightLlm::Tools::SlimHtml,

@@ -4,6 +4,7 @@ require "ruby_llm"
 
 module PlaywrightLlm
   class Error < StandardError; end
+  class BrowserLaunchError < StandardError; end
 
   class << self
     def configure
