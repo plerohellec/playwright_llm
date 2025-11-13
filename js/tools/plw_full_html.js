@@ -7,6 +7,11 @@ async function extractFullHtml() {
     process.exit(1);
   }
 
+  if (selector === 'body') {
+    console.error('Selector "body" is not allowed');
+    process.exit(1);
+  }
+
   const browser = await chromium.connectOverCDP('http://localhost:9222');
   try {
     const contexts = browser.contexts();
@@ -32,6 +37,10 @@ async function extractFullHtml() {
 
     // Extract the full HTML inside the selector
     const html = await page.locator(selector).evaluate(el => el.outerHTML);
+
+    if (html.length > 200000) {
+      throw new Error('HTML content exceeds 200,000 characters');
+    }
 
     console.log(html);
 
