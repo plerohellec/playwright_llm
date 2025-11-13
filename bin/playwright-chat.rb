@@ -5,7 +5,7 @@ Bundler.require(:default)
 
 # require 'playwright_llm'
 
-require 'readline'
+require 'reline'
 require 'logger'
 require 'dotenv/load'
 
@@ -36,6 +36,7 @@ RubyLLM.configure do |config|
   config.logger = logger
 end
 
+
 provider = 'openrouter'
 # provider = 'gemini'
 # model = 'gemini-2.5-computer-use-preview-10-2025'
@@ -43,16 +44,18 @@ provider = 'openrouter'
 model = 'google/gemini-2.5-flash-preview-09-2025'
 # model = 'gemini-2.5-flash-preview-09-2025'
 
+chat = RubyLLM::Chat.new(model: model, provider: provider)
+
 streaming = false
 
-agent = PlaywrightLlm::Agent.new(logger: logger, provider: provider, model: model)
-agent.start
+agent = PlaywrightLlm::Agent.new(logger: logger, chat: chat)
+agent.launch
 
 loop do
   lines = []
   loop do
     begin
-      line = Readline.readline(lines.empty? ? "> " : "  ", true)
+      line = Reline.readline(lines.empty? ? "> " : "  ", true)
       break if line.nil?
       lines << line
       break if line.empty?
