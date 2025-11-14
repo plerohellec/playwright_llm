@@ -56,14 +56,14 @@ RubyLLM.configure do |config|
   config.logger = logger
 end
 
-agent = PlaywrightLlm::Agent.from_provider_model(provider:, model:)
+agent = PlaywrightLLM::Agent.from_provider_model(provider:, model:)
 # chat = RubyLLM::Chat.new(model: model, provider: provider)
-# agent = PlaywrightLlm::Agent.from_chat(rubyllm_chat: chat)
+# agent = PlaywrightLLM::Agent.from_chat(rubyllm_chat: chat)
 
 user_agent = options[:user_agent] || ENV['PLAYWRIGHT_LLM_USER_AGENT'] || "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
 headless = options.key?(:headless) ? options[:headless] : true
 
-PlaywrightLlm.configure do |config|
+PlaywrightLLM.configure do |config|
   config.logger = logger
   config.headless = headless
   config.user_agent = user_agent

@@ -2,8 +2,8 @@ require 'open3'
 require 'json'
 require 'timeout'
 
-class PlaywrightLlm::Browser
-  def initialize(logger:, config: PlaywrightLlm.config)
+class PlaywrightLLM::Browser
+  def initialize(logger:, config: PlaywrightLLM.config)
     @logger = logger
     @config = config
     @wait_thr = nil

@@ -60,14 +60,14 @@ RubyLLM.configure do |config|
   config.logger = logger
 end
 
-PlaywrightLlm.configure do |config|
+PlaywrightLLM.configure do |config|
   config.logger = logger
   config.headless = options.key?(:headless) ? options[:headless] : true
   config.user_agent = options[:user_agent] || ENV['PLAYWRIGHT_LLM_USER_AGENT']
 end
 
 begin
-  agent = PlaywrightLlm::Agent.new(provider: provider, model: model)
+  agent = PlaywrightLLM::Agent.new(provider: provider, model: model)
   res = agent.start
   puts "Agent started with provider=#{provider}, model=#{model}"
 

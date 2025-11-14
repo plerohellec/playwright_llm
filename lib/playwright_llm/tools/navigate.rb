@@ -1,11 +1,11 @@
 require 'open3'
 
-class PlaywrightLlm::Tools::Navigate < RubyLLM::Tool
+class PlaywrightLLM::Tools::Navigate < RubyLLM::Tool
   description "Navigates the browser to the specified URL and returns the HTTP status code."
   param :url, desc: "The URL to navigate to", required: true
 
   def execute(url:)
-    logger = PlaywrightLlm.logger
+    logger = PlaywrightLLM.logger
     begin
       logger.info "============================"
       logger.info "Navigating to #{url}"

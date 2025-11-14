@@ -1,9 +1,9 @@
-class PlaywrightLlm::Tools::Click < RubyLLM::Tool
+class PlaywrightLLM::Tools::Click < RubyLLM::Tool
   description "Clicks on a selector on the current page and waits for the page to settle, then returns the HTTP status code."
   param :selector, desc: "The CSS selector to click on the page"
 
   def execute(selector:)
-    logger = PlaywrightLlm.logger
+    logger = PlaywrightLLM.logger
     begin
       logger.info "============================"
       logger.info "Clicking selector '#{selector}'"

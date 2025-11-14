@@ -1,9 +1,9 @@
-class PlaywrightLlm::Tools::SlimHtml < RubyLLM::Tool
+class PlaywrightLLM::Tools::SlimHtml < RubyLLM::Tool
   description "Uses the browser that was opened before to extract slimmed down HTML by removing scripts, styles, and cleaning attributes. Returns the cleaned HTML content one page at a time. Pass a page number to retrieve a specific chunk."
   param :page, desc: "The page number", required: false
 
   def execute(page: 1)
-    logger = PlaywrightLlm.logger
+    logger = PlaywrightLLM.logger
     begin
       logger.info
       logger.info "============================"

@@ -1,6 +1,6 @@
 require "logger"
 
-module PlaywrightLlm
+module PlaywrightLLM
   class Configuration
     attr_accessor :node_path, :logger, :headless, :user_agent
 

@@ -4,7 +4,7 @@ require_relative "lib/playwright_llm/version"
 
 Gem::Specification.new do |spec|
   spec.name = "playwright_llm"
-  spec.version = PlaywrightLlm::VERSION
+  spec.version = PlaywrightLLM::VERSION
   spec.authors = ["Philippe Le Rohellec"]
   spec.email = ["philippe@lerohellec.com"]
 

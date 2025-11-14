@@ -1,4 +1,4 @@
-class PlaywrightLlm::Tools::Executor < RubyLLM::Tool
+class PlaywrightLLM::Tools::Executor < RubyLLM::Tool
   description "Executes a Playwright js script and returns the output. The script must first import the necessary Playwright modules and launch a chromium browser instance, navigate to the desired URL, perform actions, and then close the browser."
   param :script_code, desc: "The Playwright js script code to execute as a string"
 

@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-module PlaywrightLlm
+module PlaywrightLLM
   class Agent
     def initialize(rubyllm_chat: nil, provider: nil, model: nil)
-      @logger = PlaywrightLlm.logger
+      @logger = PlaywrightLLM.logger
       if rubyllm_chat.nil?
         raise ArgumentError, 'provider must be provided' if provider.nil?
         raise ArgumentError, 'model must be provided' if model.nil?
@@ -32,15 +32,15 @@ module PlaywrightLlm
     end
 
     def launch
-      @browser_tool = PlaywrightLlm::Browser.new(logger: @logger)
+      @browser_tool = PlaywrightLLM::Browser.new(logger: @logger)
       res = @browser_tool.execute()
       @logger.debug "Browser tool execution result: #{res.inspect}"
-      raise PlaywrightLlm::BrowserLaunchError, "Failed to start browser tool" unless res[:success]
+      raise PlaywrightLLM::BrowserLaunchError, "Failed to start browser tool" unless res[:success]
 
-      tools = [ PlaywrightLlm::Tools::Navigate,
-                PlaywrightLlm::Tools::SlimHtml,
-                PlaywrightLlm::Tools::Click,
-                PlaywrightLlm::Tools::FullHtml ]
+      tools = [ PlaywrightLLM::Tools::Navigate,
+                PlaywrightLLM::Tools::SlimHtml,
+                PlaywrightLLM::Tools::Click,
+                PlaywrightLLM::Tools::FullHtml ]
       @chat = @chat.with_tools(*tools).on_tool_call { |tool_call| fix_tool_call(tool_call) }
     end
 
