@@ -24,49 +24,53 @@ async function click() {
     const page = pages[0];
     await page.emulateMedia({ colorScheme: 'dark' });
 
-    // Check if the selector exists
-    const element = await page.locator(selector);
-    if (await element.count() === 0) {
+    // Check if the selector exists and find the first visible and enabled element
+    const elements = await page.locator(selector).all();
+    if (elements.length === 0) {
       console.error(`Selector "${selector}" not found on the page`);
       exitCode = 1;
-    } else if (!(await element.isVisible())) {
-      console.error(`Selector "${selector}" is not visible on the page`);
-      exitCode = 1;
-    } else if (!(await element.isEnabled())) {
-      console.error(`Selector "${selector}" is not enabled on the page`);
-      exitCode = 1;
     } else {
-      const innerText = await element.innerText();
-      const truncatedText = innerText.substring(0, 100);
-      console.log(`Selector inner text: ${truncatedText}`);
-
-      // Click the selector and wait for the page to settle
-      await page.click(selector, { timeout: 2000 })
-      try {
-        await page.waitForLoadState('networkidle', { timeout: 5000 });
-      } catch (err) {
-        if (err && err.name === 'TimeoutError') {
-          const readyState = await page.evaluate(() => document.readyState);
-          if (readyState !== 'complete') {
-            throw new Error(
-              `Timed out waiting for networkidle (5s); document.readyState='${readyState}'`
-            );
-          }
-          console.warn('Timed out waiting for networkidle, but document.readyState is complete — continuing.');
-        } else {
-          throw err;
+      let targetElement = null;
+      for (const el of elements) {
+        if (await el.isVisible() && await el.isEnabled()) {
+          targetElement = el;
+          break;
         }
       }
-      await page.evaluate(addVpsbIds);
+      if (!targetElement) {
+        console.error(`No visible and enabled element found for selector "${selector}"`);
+        exitCode = 1;
+      } else {
+        const innerText = await targetElement.innerText();
+        const truncatedText = innerText.substring(0, 100);
+        console.log(`PLWLLM_LOG: Selector inner text: "${truncatedText}"`);
 
-      console.log(JSON.stringify({ "status_code": 200, url: page.url() }));
+        // Click the target element and wait for the page to settle
+        await targetElement.click({ timeout: 4000 });
+        try {
+          await page.waitForLoadState('networkidle', { timeout: 5000 });
+        } catch (err) {
+          if (err && err.name === 'TimeoutError') {
+            const readyState = await page.evaluate(() => document.readyState);
+            if (readyState !== 'complete') {
+              throw new Error(
+                `Timed out waiting for networkidle (5s); document.readyState='${readyState}'`
+              );
+            }
+            console.warn('PLWLLM_LOG: Timed out waiting for networkidle, but document.readyState is complete — continuing.');
+          } else {
+            throw err;
+          }
+        }
+        await page.evaluate(addVpsbIds);
+
+        console.log(JSON.stringify({ "status_code": 200, url: page.url() }));
+      }
     }
-
   } catch (error) {
     console.error(`Error during processing selector "${selector}":`, error);
     exitCode = 1;
   } finally {
-    // close the connection without closing the actual browser process
     await browser.close();
   }
   return exitCode;

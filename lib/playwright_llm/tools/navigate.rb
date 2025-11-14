@@ -9,21 +9,20 @@ class PlaywrightLlm::Tools::Navigate < RubyLLM::Tool
     begin
       logger.info "============================"
       logger.info "Navigating to #{url}"
-      logger.info "============================="
       script_path = File.join(__dir__, '../../../js/tools/plw_navigate.js')
-      cmd = "node #{script_path} '#{url}'"
-      stdout, stderr, status = Open3.capture3(cmd)
-      output = stdout + stderr
-      exit_status = status.exitstatus
 
-      if !stderr.strip.empty?
-        stderr.each_line do |line|
-          logger.warn line.strip unless line.strip.empty?
+      cmd = "node #{script_path} '#{url}'"
+      output = `#{cmd} 2>&1`
+      exit_status = $?.exitstatus
+
+      output.lines.each do |line|
+        if line =~ /PLWLLM_LOG: (.+)/
+          logger.info $1
         end
       end
+      output.gsub!(/PLWLLM_LOG: /, '')
 
       if exit_status == 0
-        logger.info "************************"
         logger.info "Navigation successful"
         logger.info "************************"
 

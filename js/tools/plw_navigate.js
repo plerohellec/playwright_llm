@@ -27,7 +27,7 @@ async function navigate() {
     await page.emulateMedia({ colorScheme: 'dark' });
 
     console.log('Navigating to:', url);
-    const response = await page.goto(url, { waitUntil: 'load', timeout: 8000 });
+    const response = await page.goto(url, { waitUntil: 'load', timeout: 12000 });
 
     // Wait up to 5s for the network to go idle. If it times out, check
     // document.readyState — some pages may be "complete" even if
@@ -43,7 +43,7 @@ async function navigate() {
             `Timed out waiting for networkidle (5s); document.readyState='${readyState}'`
           );
         }
-        console.warn('Timed out waiting for networkidle, but document.readyState is complete — continuing.');
+        console.warn('PLWLLM_LOG: Timed out waiting for networkidle, but document.readyState is complete — continuing.');
       } else {
         throw err;
       }
