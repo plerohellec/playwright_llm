@@ -17,6 +17,7 @@ class PlaywrightLlm::Tools::Click < RubyLLM::Tool
         logger.info "============================="
         logger.info "Click successful: #{output}"
         logger.info "============================="
+        logger.debug "Output: #{output.strip}"
         output
       else
         logger.error "Script execution failed with exit code #{exit_status}: #{output}"

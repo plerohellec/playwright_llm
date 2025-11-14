@@ -1,3 +1,5 @@
+require 'open3'
+
 class PlaywrightLlm::Tools::Navigate < RubyLLM::Tool
   description "Navigates the browser to the specified URL and returns the HTTP status code."
   param :url, desc: "The URL to navigate to", required: true
@@ -10,13 +12,22 @@ class PlaywrightLlm::Tools::Navigate < RubyLLM::Tool
       logger.info "============================="
       script_path = File.join(__dir__, '../../../js/tools/plw_navigate.js')
       cmd = "node #{script_path} '#{url}'"
-      output = `#{cmd} 2>&1`
-      exit_status = $?.exitstatus
+      stdout, stderr, status = Open3.capture3(cmd)
+      output = stdout + stderr
+      exit_status = status.exitstatus
+
+      if !stderr.strip.empty?
+        stderr.each_line do |line|
+          logger.warn line.strip unless line.strip.empty?
+        end
+      end
 
       if exit_status == 0
         logger.info "************************"
         logger.info "Navigation successful"
         logger.info "************************"
+
+        logger.debug "Output: #{output.strip}"
         output
       else
         logger.error "Script execution failed with exit code #{exit_status}: #{output}"

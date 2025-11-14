@@ -36,9 +36,27 @@ async function click() {
       console.error(`Selector "${selector}" is not enabled on the page`);
       exitCode = 1;
     } else {
+      const innerText = await element.innerText();
+      const truncatedText = innerText.substring(0, 100);
+      console.log(`Selector inner text: ${truncatedText}`);
+
       // Click the selector and wait for the page to settle
       await page.click(selector, { timeout: 2000 })
-      await page.waitForLoadState('networkidle');
+      try {
+        await page.waitForLoadState('networkidle', { timeout: 5000 });
+      } catch (err) {
+        if (err && err.name === 'TimeoutError') {
+          const readyState = await page.evaluate(() => document.readyState);
+          if (readyState !== 'complete') {
+            throw new Error(
+              `Timed out waiting for networkidle (5s); document.readyState='${readyState}'`
+            );
+          }
+          console.warn('Timed out waiting for networkidle, but document.readyState is complete — continuing.');
+        } else {
+          throw err;
+        }
+      }
       await page.evaluate(addVpsbIds);
 
       console.log(JSON.stringify({ "status_code": 200, url: page.url() }));

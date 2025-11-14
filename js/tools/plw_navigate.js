@@ -27,8 +27,27 @@ async function navigate() {
     await page.emulateMedia({ colorScheme: 'dark' });
 
     console.log('Navigating to:', url);
-    const response = await page.goto(url, { waitUntil: 'load' });
-    await page.waitForLoadState('networkidle');
+    const response = await page.goto(url, { waitUntil: 'load', timeout: 8000 });
+
+    // Wait up to 5s for the network to go idle. If it times out, check
+    // document.readyState — some pages may be "complete" even if
+    // networkidle didn't happen (heavy connections, streaming, etc.).
+    try {
+      await page.waitForLoadState('networkidle', { timeout: 5000 });
+    } catch (err) {
+      // Only handle timeout here; rethrow other errors
+      if (err && err.name === 'TimeoutError') {
+        const readyState = await page.evaluate(() => document.readyState);
+        if (readyState !== 'complete') {
+          throw new Error(
+            `Timed out waiting for networkidle (5s); document.readyState='${readyState}'`
+          );
+        }
+        console.warn('Timed out waiting for networkidle, but document.readyState is complete — continuing.');
+      } else {
+        throw err;
+      }
+    }
 
     console.log('Page loaded');
 
