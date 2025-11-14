@@ -24,7 +24,7 @@ class PlaywrightLlm::Tools::Navigate < RubyLLM::Tool
 
       if exit_status == 0
         logger.info "Navigation successful"
-        logger.info "************************"
+        logger.info "============================"
 
         logger.debug "Output: #{output.strip}"
         output

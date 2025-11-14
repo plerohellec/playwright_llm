@@ -9,7 +9,7 @@ module PlaywrightLlm
         raise ArgumentError, 'model must be provided' if model.nil?
         @provider = provider
         @model = model
-        @chat = nil
+        @chat = RubyLLM::Chat.new(model: @model, provider: @provider)
       else
         @provider = nil
         @model = nil
@@ -26,6 +26,11 @@ module PlaywrightLlm
       new(provider: provider, model: model)
     end
 
+    def with_instructions(instructions)
+      @chat = @chat.with_instructions(instructions)
+      self
+    end
+
     def launch
       @browser_tool = PlaywrightLlm::Browser.new(logger: @logger)
       res = @browser_tool.execute()
@@ -36,11 +41,7 @@ module PlaywrightLlm
                 PlaywrightLlm::Tools::SlimHtml,
                 PlaywrightLlm::Tools::Click,
                 PlaywrightLlm::Tools::FullHtml ]
-      if @chat.nil?
-        @chat = RubyLLM::Chat.new(model: @model, provider: @provider)
-      end
-      @chat = @chat.with_tools(*tools)
-                  .on_tool_call { |tool_call| fix_tool_call(tool_call) }
+      @chat = @chat.with_tools(*tools).on_tool_call { |tool_call| fix_tool_call(tool_call) }
     end
 
     def ask(prompt)

@@ -31,12 +31,10 @@ async function extractFullHtml() {
     // Check if the selector exists
     const element = await page.locator(selector);
     if (await element.count() === 0) {
-      console.error(`Selector "${selector}" not found on the page`);
-      exitCode = 1;
+      throw new Error(`Selector "${selector}" not found on the page`);
     } else {
       // Extract the full HTML inside the selector
       const html = await page.locator(selector).evaluate(el => el.outerHTML);
-
       if (html.length > 200000) {
         throw new Error('HTML content exceeds 200,000 characters');
       }

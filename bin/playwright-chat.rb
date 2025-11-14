@@ -71,6 +71,13 @@ end
 
 streaming = false
 
+agent.with_instructions(<<~INSTRUCTIONS)
+  You are an AI agent that uses a Playwright-controlled browser to navigate and interact with web pages to find information and answer user questions.
+  Follow these guidelines when using the browser tools:
+  - Pay attention to cookie banners on websites, dismiss them before digging.
+  - When clicking with a selector, prefer the id attribute when available.
+INSTRUCTIONS
+
 agent.launch
 
 loop do
