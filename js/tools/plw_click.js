@@ -9,6 +9,7 @@ async function click() {
   }
 
   const browser = await chromium.connectOverCDP('http://localhost:9222');
+  let exitCode = 0;
   try {
     const contexts = browser.contexts();
     if (contexts.length === 0) {
@@ -27,37 +28,30 @@ async function click() {
     const element = await page.locator(selector);
     if (await element.count() === 0) {
       console.error(`Selector "${selector}" not found on the page`);
-      await browser.close();
-      process.exit(1);
-    }
-
-    // Check if the selector is visible
-    if (!(await element.isVisible())) {
+      exitCode = 1;
+    } else if (!(await element.isVisible())) {
       console.error(`Selector "${selector}" is not visible on the page`);
-      await browser.close();
-      process.exit(1);
-    }
-
-    // Check if the selector is enabled
-    if (!(await element.isEnabled())) {
+      exitCode = 1;
+    } else if (!(await element.isEnabled())) {
       console.error(`Selector "${selector}" is not enabled on the page`);
-      await browser.close();
-      process.exit(1);
+      exitCode = 1;
+    } else {
+      // Click the selector and wait for the page to settle
+      await page.click(selector, { timeout: 2000 })
+      await page.waitForLoadState('networkidle');
+      await page.evaluate(addVpsbIds);
+
+      console.log(JSON.stringify({ "status_code": 200, url: page.url() }));
     }
-
-    // Click the selector and wait for the page to settle
-    await page.click(selector, { timeout: 2000 })
-    await page.waitForLoadState('networkidle');
-    await page.evaluate(addVpsbIds);
-
-    console.log(JSON.stringify({ "status_code": 200, url: page.url() }));
 
   } catch (error) {
     console.error(`Error during processing selector "${selector}":`, error);
+    exitCode = 1;
   } finally {
     // close the connection without closing the actual browser process
     await browser.close();
   }
+  return exitCode;
 }
 
-click().catch(console.error);
+click().then(exitCode => process.exit(exitCode));

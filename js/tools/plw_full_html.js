@@ -13,6 +13,7 @@ async function extractFullHtml() {
   }
 
   const browser = await chromium.connectOverCDP('http://localhost:9222');
+  let exitCode = 0;
   try {
     const contexts = browser.contexts();
     if (contexts.length === 0) {
@@ -31,25 +32,26 @@ async function extractFullHtml() {
     const element = await page.locator(selector);
     if (await element.count() === 0) {
       console.error(`Selector "${selector}" not found on the page`);
-      await browser.close();
-      process.exit(1);
+      exitCode = 1;
+    } else {
+      // Extract the full HTML inside the selector
+      const html = await page.locator(selector).evaluate(el => el.outerHTML);
+
+      if (html.length > 200000) {
+        throw new Error('HTML content exceeds 200,000 characters');
+      }
+
+      console.log(html);
     }
-
-    // Extract the full HTML inside the selector
-    const html = await page.locator(selector).evaluate(el => el.outerHTML);
-
-    if (html.length > 200000) {
-      throw new Error('HTML content exceeds 200,000 characters');
-    }
-
-    console.log(html);
 
   } catch (error) {
     console.error('Error during processing:', error);
+    exitCode = 1;
   } finally {
     // close the connection without closing the actual browser process
     await browser.close();
   }
+  return exitCode;
 }
 
-extractFullHtml().catch(console.error);
+extractFullHtml().then(exitCode => process.exit(exitCode));

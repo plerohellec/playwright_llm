@@ -2,18 +2,26 @@
 
 module PlaywrightLlm
   class Agent
-    def initialize(logger:, chat: nil, provider: nil, model: nil)
+    def initialize(logger:, rubyllm_chat: nil, provider: nil, model: nil)
       @logger = logger
-      if chat.nil?
+      if rubyllm_chat.nil?
         @provider = provider || 'openrouter'
         @model = model || 'google/gemini-2.5-flash-preview-09-2025'
         @chat = nil
       else
         @provider = nil
         @model = nil
-        @chat = chat
+        @chat = rubyllm_chat
       end
       @browser_tool = nil
+    end
+
+    def self.from_chat(rubyllm_chat:, logger:)
+      new(logger: logger, rubyllm_chat: rubyllm_chat)
+    end
+
+    def self.from_provider_model(provider:, model:, logger:)
+      new(logger: logger, provider: provider, model: model)
     end
 
     def launch

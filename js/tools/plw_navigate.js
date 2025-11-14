@@ -11,6 +11,7 @@ async function navigate() {
 
   const browser = await chromium.connectOverCDP('http://localhost:9222');
   console.log('Connected to browser');
+  let exitCode = 0;
   try {
     const contexts = browser.contexts();
     if (contexts.length === 0) {
@@ -36,10 +37,12 @@ async function navigate() {
     console.log(JSON.stringify({ "status_code": response.status() }));
   } catch (error) {
     console.error('Error during processing:', error);
+    exitCode = 1;
   } finally {
     // close the connection without closing the actual browser process
     await browser.close();
   }
+  return exitCode;
 }
 
-navigate().catch(console.error);
+navigate().then(exitCode => process.exit(exitCode));

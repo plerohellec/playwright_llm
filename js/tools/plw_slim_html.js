@@ -6,6 +6,7 @@ async function slimHtml() {
 
   const browser = await chromium.connectOverCDP('http://localhost:9222');
   console.debug('Connected to browser');
+  let exitCode = 0;
   try {
     const contexts = browser.contexts();
     if (contexts.length === 0) {
@@ -33,12 +34,13 @@ async function slimHtml() {
     console.log(output);
   } catch (error) {
     console.error('Error during processing:', error);
+    exitCode = 1;
 
   } finally {
     // close the connection without closing the actual browser process
     await browser.close();
   }
-
+  return exitCode;
 }
 
-slimHtml().catch(console.error);
+slimHtml().then(exitCode => process.exit(exitCode));

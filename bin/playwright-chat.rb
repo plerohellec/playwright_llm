@@ -48,7 +48,8 @@ chat = RubyLLM::Chat.new(model: model, provider: provider)
 
 streaming = false
 
-agent = PlaywrightLlm::Agent.new(logger: logger, chat: chat)
+# agent = PlaywrightLlm::Agent.from_provider_model(provider:, model:, logger:)
+agent = PlaywrightLlm::Agent.from_chat(rubyllm_chat: chat, logger: logger)
 agent.launch
 
 loop do

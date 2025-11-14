@@ -3,28 +3,27 @@ class PlaywrightLlm::Tools::Click < RubyLLM::Tool
   param :selector, desc: "The CSS selector to click on the page"
 
   def execute(selector:)
+    logger = RubyLLM.logger
     begin
-      puts
-      puts "============================"
-      puts "Clicking selector '#{selector}'"
-      puts "============================="
-
+      logger.info "============================"
+      logger.info "Clicking selector '#{selector}'"
+      logger.info "============================="
       script_path = File.join(__dir__, '../../../js/tools/plw_click.js')
       cmd = "node #{script_path} '#{selector}'"
       output = `#{cmd} 2>&1`
       exit_status = $?.exitstatus
 
       if exit_status == 0
-        puts "============================="
-        puts "Click successful: #{output}"
-        puts "============================="
+        logger.info "============================="
+        logger.info "Click successful: #{output}"
+        logger.info "============================="
         output
       else
-        puts "Script execution failed with exit code #{exit_status}: #{output}"
+        logger.error "Script execution failed with exit code #{exit_status}: #{output}"
         { error: "Script execution failed with exit code #{exit_status}: #{output}" }
       end
     rescue => e
-      puts "Failed to execute script: #{e.class} - #{e.message}"
+      logger.error "Failed to execute script: #{e.class} - #{e.message}"
       { error: "Failed to execute script: #{e.message}" }
     end
   end
