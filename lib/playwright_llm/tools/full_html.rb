@@ -3,7 +3,7 @@ class PlaywrightLlm::Tools::FullHtml < RubyLLM::Tool
   param :selector, desc: "The CSS selector to extract HTML from"
 
   def execute(selector:)
-    logger = RubyLLM.logger
+    logger = PlaywrightLlm.logger
     begin
       logger.info "============================"
       logger.info "Extracting full HTML from selector '#{selector}'"

@@ -3,7 +3,7 @@ const { chromium } = require('playwright');
 (async () => {
   // Launch browser normally (not as server) to keep state persistent
   const browser = await chromium.launch({
-    headless: true,
+    headless: false,
     args: ['--remote-debugging-port=9222']
   });
 

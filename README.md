@@ -22,7 +22,20 @@ gem install UPDATE_WITH_YOUR_GEM_NAME_IMMEDIATELY_AFTER_RELEASE_TO_RUBYGEMS_ORG
 
 ## Usage
 
-TODO: Write usage instructions here
+PlaywrightLlm wires into a `Logger` out of the box (`INFO` level, `STDOUT`). You can override it by assigning your own logger via `PlaywrightLlm.configure` (or by setting `PlaywrightLlm.logger = logger` directly). Example:
+
+```ruby
+require "logger"
+
+logger = Logger.new($stdout)
+logger.level = Logger::DEBUG
+
+PlaywrightLlm.configure do |config|
+	config.logger = logger
+end
+```
+
+That logger will be reused by agents, browsers, and tools, so all PlaywrightLlm log output follows the handler you provide.
 
 ## Development
 

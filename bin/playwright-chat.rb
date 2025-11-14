@@ -36,6 +36,10 @@ RubyLLM.configure do |config|
   config.logger = logger
 end
 
+PlaywrightLlm.configure do |config|
+  config.logger = logger
+end
+
 
 provider = 'openrouter'
 # provider = 'gemini'
@@ -48,8 +52,8 @@ chat = RubyLLM::Chat.new(model: model, provider: provider)
 
 streaming = false
 
-# agent = PlaywrightLlm::Agent.from_provider_model(provider:, model:, logger:)
-agent = PlaywrightLlm::Agent.from_chat(rubyllm_chat: chat, logger: logger)
+# agent = PlaywrightLlm::Agent.from_provider_model(provider:, model:)
+agent = PlaywrightLlm::Agent.from_chat(rubyllm_chat: chat)
 agent.launch
 
 loop do

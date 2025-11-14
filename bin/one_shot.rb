@@ -52,8 +52,12 @@ RubyLLM.configure do |config|
   config.logger = logger
 end
 
+PlaywrightLlm.configure do |config|
+  config.logger = logger
+end
+
 begin
-  agent = PlaywrightLlm::Agent.new(logger: logger, provider: provider, model: model)
+  agent = PlaywrightLlm::Agent.new(provider: provider, model: model)
   res = agent.start
   puts "Agent started with provider=#{provider}, model=#{model}"
 

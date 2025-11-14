@@ -3,7 +3,7 @@ class PlaywrightLlm::Tools::SlimHtml < RubyLLM::Tool
   param :page, desc: "The page number", required: false
 
   def execute(page: 1)
-    logger = RubyLLM.logger
+    logger = PlaywrightLlm.logger
     begin
       logger.info
       logger.info "============================"

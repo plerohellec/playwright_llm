@@ -3,7 +3,7 @@ class PlaywrightLlm::Tools::Click < RubyLLM::Tool
   param :selector, desc: "The CSS selector to click on the page"
 
   def execute(selector:)
-    logger = RubyLLM.logger
+    logger = PlaywrightLlm.logger
     begin
       logger.info "============================"
       logger.info "Clicking selector '#{selector}'"

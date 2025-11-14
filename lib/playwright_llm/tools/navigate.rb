@@ -3,7 +3,7 @@ class PlaywrightLlm::Tools::Navigate < RubyLLM::Tool
   param :url, desc: "The URL to navigate to", required: true
 
   def execute(url:)
-    logger = RubyLLM.logger
+    logger = PlaywrightLlm.logger
     begin
       logger.info "============================"
       logger.info "Navigating to #{url}"

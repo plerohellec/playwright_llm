@@ -1,7 +1,13 @@
-class PlaywrightLlm::Configuration
-  attr_accessor :node_path
+require "logger"
 
-  def initialize
-    @node_path= '.'
+module PlaywrightLlm
+  class Configuration
+    attr_accessor :node_path, :logger
+
+    def initialize
+      @node_path = '.'
+      @logger = Logger.new($stdout)
+      @logger.level = Logger::INFO
+    end
   end
 end

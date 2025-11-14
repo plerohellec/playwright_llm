@@ -1,6 +1,9 @@
 # frozen_string_literal: true
 
+require "logger"
 require "ruby_llm"
+
+require_relative "playwright_llm/configuration"
 
 module PlaywrightLlm
   class Error < StandardError; end
@@ -13,6 +16,14 @@ module PlaywrightLlm
 
     def config
       @config ||= Configuration.new
+    end
+
+    def logger
+      config.logger
+    end
+
+    def logger=(logger)
+      config.logger = logger
     end
   end
 

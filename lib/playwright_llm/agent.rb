@@ -2,8 +2,8 @@
 
 module PlaywrightLlm
   class Agent
-    def initialize(logger:, rubyllm_chat: nil, provider: nil, model: nil)
-      @logger = logger
+    def initialize(rubyllm_chat: nil, provider: nil, model: nil)
+      @logger = PlaywrightLlm.logger
       if rubyllm_chat.nil?
         @provider = provider || 'openrouter'
         @model = model || 'google/gemini-2.5-flash-preview-09-2025'
@@ -16,12 +16,12 @@ module PlaywrightLlm
       @browser_tool = nil
     end
 
-    def self.from_chat(rubyllm_chat:, logger:)
-      new(logger: logger, rubyllm_chat: rubyllm_chat)
+    def self.from_chat(rubyllm_chat:)
+      new(rubyllm_chat: rubyllm_chat)
     end
 
-    def self.from_provider_model(provider:, model:, logger:)
-      new(logger: logger, provider: provider, model: model)
+    def self.from_provider_model(provider:, model:)
+      new(provider: provider, model: model)
     end
 
     def launch
@@ -38,7 +38,7 @@ module PlaywrightLlm
         @chat = RubyLLM::Chat.new(model: @model, provider: @provider)
       end
       @chat = @chat.with_tools(*tools)
-                  .on_tool_call { |tool_call| fix_tool_call(tool_call, @logger) }
+                  .on_tool_call { |tool_call| fix_tool_call(tool_call) }
     end
 
     def ask(prompt)
@@ -51,13 +51,13 @@ module PlaywrightLlm
 
     private
 
-    def fix_tool_call(tool_call, logger)
-      logger.debug "\n[Tool Call] #{tool_call.name}"
-      logger.debug "    with params #{tool_call.arguments}\n"
+    def fix_tool_call(tool_call)
+      @logger.debug "\n[Tool Call] #{tool_call.name}"
+      @logger.debug "    with params #{tool_call.arguments}\n"
 
       # Gemini tends to mess up with the tool names by replacing '--' with '__'
       if tool_call.name =~ /^tools__/
-        logger.warn "Renaming tool call from #{tool_call.name} to #{tool_call.name.gsub('tools__', 'tools--')}"
+        @logger.warn "Renaming tool call from #{tool_call.name} to #{tool_call.name.gsub('tools__', 'tools--')}"
         tool_call.name.gsub!('tools__', 'tools--')
       end
     end
