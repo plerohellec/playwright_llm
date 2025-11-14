@@ -5,8 +5,10 @@ module PlaywrightLlm
     def initialize(rubyllm_chat: nil, provider: nil, model: nil)
       @logger = PlaywrightLlm.logger
       if rubyllm_chat.nil?
-        @provider = provider || 'openrouter'
-        @model = model || 'google/gemini-2.5-flash-preview-09-2025'
+        raise ArgumentError, 'provider must be provided' if provider.nil?
+        raise ArgumentError, 'model must be provided' if model.nil?
+        @provider = provider
+        @model = model
         @chat = nil
       else
         @provider = nil

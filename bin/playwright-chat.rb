@@ -40,16 +40,25 @@ OptionParser.new do |opts|
   end
 end.parse!(ARGV.clone)
 
+provider = 'openrouter'
+model    = 'google/gemini-2.5-flash-preview-09-2025'
+# provider = 'gemini'
+# model = 'gemini-2.5-computer-use-preview-10-2025'
+# model = 'x-ai/grok-code-fast-1'
+# model = 'gemini-2.5-flash-preview-09-2025'
+
+
 RubyLLM.configure do |config|
   config.openrouter_api_key = ENV['OPENROUTER_API_KEY']
   config.gemini_api_key = ENV['GEMINI_API_KEY']
-  config.default_model = "google/gemini-2.5-flash-preview-09-2025"
 
-  # Use the new association-based acts_as API (recommended)
   config.use_new_acts_as = true
-
   config.logger = logger
 end
+
+agent = PlaywrightLlm::Agent.from_provider_model(provider:, model:)
+# chat = RubyLLM::Chat.new(model: model, provider: provider)
+# agent = PlaywrightLlm::Agent.from_chat(rubyllm_chat: chat)
 
 user_agent = options[:user_agent] || ENV['PLAYWRIGHT_LLM_USER_AGENT'] || "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
 headless = options.key?(:headless) ? options[:headless] : true
@@ -60,19 +69,8 @@ PlaywrightLlm.configure do |config|
   config.user_agent = user_agent
 end
 
-provider = 'openrouter'
-# provider = 'gemini'
-# model = 'gemini-2.5-computer-use-preview-10-2025'
-# model = 'x-ai/grok-code-fast-1'
-model = 'google/gemini-2.5-flash-preview-09-2025'
-# model = 'gemini-2.5-flash-preview-09-2025'
-
-chat = RubyLLM::Chat.new(model: model, provider: provider)
-
 streaming = false
 
-# agent = PlaywrightLlm::Agent.from_provider_model(provider:, model:)
-agent = PlaywrightLlm::Agent.from_chat(rubyllm_chat: chat)
 agent.launch
 
 loop do
