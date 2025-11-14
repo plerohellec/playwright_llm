@@ -3,17 +3,25 @@ require 'json'
 require 'timeout'
 
 class PlaywrightLlm::Browser
-  def initialize(logger:)
+  def initialize(logger:, config: PlaywrightLlm.config)
     @logger = logger
+    @config = config
     @wait_thr = nil
   end
 
   def execute
     launcher_path = File.join(__dir__, '../../js/launcher.js')
     cmd = "node #{launcher_path}"
+    headless_value = @config.headless.nil? ? true : @config.headless
+    env = {
+      'PLAYWRIGHT_LLM_HEADLESS' => headless_value.to_s
+    }
+    if @config.user_agent
+      env['PLAYWRIGHT_LLM_USER_AGENT'] = @config.user_agent
+    end
 
     # Start child process in its own process group so it doesn't receive parent's signals
-    stdin, stdout, stderr, @wait_thr = Open3.popen3(cmd, pgroup: 0)
+    stdin, stdout, stderr, @wait_thr = Open3.popen3(env, cmd, pgroup: 0)
     @logger.info "Started Playwright browser process with PID #{@wait_thr.pid}"
 
     output = ""

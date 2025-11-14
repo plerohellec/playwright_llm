@@ -1,16 +1,32 @@
 const { chromium } = require('playwright');
 
+const parseHeadless = () => {
+  const envValue = process.env.PLAYWRIGHT_LLM_HEADLESS;
+  if (!envValue) {
+    return true;
+  }
+
+  const normalized = envValue.trim().toLowerCase();
+  return !['false', '0', 'no', 'off'].includes(normalized);
+};
+
 (async () => {
   // Launch browser normally (not as server) to keep state persistent
+  const headless = parseHeadless();
+  const userAgent = process.env.PLAYWRIGHT_LLM_USER_AGENT;
+
   const browser = await chromium.launch({
-    headless: false,
+    headless,
     args: ['--remote-debugging-port=9222']
   });
 
-  const context = await browser.newContext({
-    userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
+  const contextOptions = {
     colorScheme: 'dark'
-  });
+  };
+  if (userAgent) {
+    contextOptions.userAgent = userAgent;
+  }
+  const context = await browser.newContext(contextOptions);
   const page = await context.newPage();
 
   console.log('{ "status_code": 200 }');

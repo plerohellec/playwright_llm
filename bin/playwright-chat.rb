@@ -5,6 +5,7 @@ Bundler.require(:default)
 
 # require 'playwright_llm'
 
+require 'optparse'
 require 'reline'
 require 'logger'
 require 'dotenv/load'
@@ -25,6 +26,19 @@ logger = Logger.new(STDOUT)
 logger.formatter = LogFormatter.new
 logger.level = Logger::INFO
 
+options = {}
+OptionParser.new do |opts|
+  opts.banner = "Usage: playwright-chat.rb [options]"
+
+  opts.on("--[no-]headless", "Run Playwright headless (default: headless)") do |value|
+    options[:headless] = value
+  end
+
+  opts.on("--user-agent USER_AGENT", "Custom user agent for Playwright") do |ua|
+    options[:user_agent] = ua
+  end
+end.parse!(ARGV.clone)
+
 RubyLLM.configure do |config|
   config.openrouter_api_key = ENV['OPENROUTER_API_KEY']
   config.gemini_api_key = ENV['GEMINI_API_KEY']
@@ -36,8 +50,13 @@ RubyLLM.configure do |config|
   config.logger = logger
 end
 
+user_agent = options[:user_agent] || ENV['PLAYWRIGHT_LLM_USER_AGENT'] || "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+headless = options.key?(:headless) ? options[:headless] : false
+
 PlaywrightLlm.configure do |config|
   config.logger = logger
+  config.headless = headless
+  config.user_agent = user_agent
 end
 
 

@@ -35,6 +35,17 @@ PlaywrightLlm.configure do |config|
 end
 ```
 
+You can also tweak how Playwright launches its browser. `headless` defaults to `true`, and `user_agent` is only injected when you explicitly configure it (Playwright otherwise uses its own built-in string). Override them like this:
+
+```ruby
+PlaywrightLlm.configure do |config|
+	config.headless = false
+	config.user_agent = "Mozilla/5.0 (Linux; x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+end
+```
+
+The CLI scripts respect these settings too: `bin/one_shot.rb` accepts `--[no-]headless` and `--user-agent`, while `bin/playwright-chat.rb` now supports the same flags on the command line (with the previous `PLAYWRIGHT_LLM_USER_AGENT` environment override still available).
+
 That logger will be reused by agents, browsers, and tools, so all PlaywrightLlm log output follows the handler you provide.
 
 ## Development

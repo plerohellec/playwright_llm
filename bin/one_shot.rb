@@ -30,6 +30,14 @@ OptionParser.new do |opts|
   opts.on("--model MODEL", "Model (default: google/gemini-2.5-flash-preview-09-2025)") do |m|
     options[:model] = m
   end
+
+  opts.on("--[no-]headless", "Run Playwright headless (default: headless)") do |value|
+    options[:headless] = value
+  end
+
+  opts.on("--user-agent USER_AGENT", "Custom user agent string for Playwright") do |ua|
+    options[:user_agent] = ua
+  end
 end.parse!
 
 prompt = ARGV.join(' ')
@@ -54,6 +62,8 @@ end
 
 PlaywrightLlm.configure do |config|
   config.logger = logger
+  config.headless = options.key?(:headless) ? options[:headless] : true
+  config.user_agent = options[:user_agent] || ENV['PLAYWRIGHT_LLM_USER_AGENT']
 end
 
 begin
