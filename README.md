@@ -1,63 +1,120 @@
-# Playwright::Llm
+# Playwright::LLM
 
-TODO: Delete this and the text below, and describe your gem
+Playwright::LLM is a Ruby helper that combines the conversational capabilities of `RubyLLM` with a Playwright-powered Chromium browser so you can browse, click, and scrape websites through the same tooling used by large language models.
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/playwright/llm`. To experiment with that code, run `bin/console` for an interactive prompt.
+## Overview
+
+- **Persistent Playwright bridge.** `PlaywrightLLM::Browser` starts the Node.js launcher in `js/launcher.js`, keeps Chromium open on CDP port 9222, and exposes environment variables for headless mode and user agents.
+- **Reusable browser tools.** The Ruby tools in `lib/playwright_llm/tools/*` wrap the scripts in `js/tools/`, letting a model call `Navigate`, `SlimHtml`, `Click`, `FullHtml`, or even the generic `Executor` without writing JavaScript.
+- **LLM-centric agent.** `PlaywrightLLM::Agent` wires up a `RubyLLM::Chat`, registers the browser tools, normalizes garbled tool names, and exposes a simple `launch`, `ask`, and `close` lifecycle.
+
+## Requirements
+
+- **Ruby** `>= 3.2.0` (see `playwright_llm.gemspec`).
+- **Node.js** (Playwright 1.56.1 prefers Node 18+).
+- **Playwright dependencies.** Run `npm install` and `npx playwright install chromium` so the JavaScript helpers can launch Chromium.
+- **API keys.** Provide `OPENROUTER_API_KEY` and/or `GEMINI_API_KEY` via ENV so the default CLI content providers can talk to OpenRouter or Gemini.
 
 ## Installation
 
-TODO: Replace `UPDATE_WITH_YOUR_GEM_NAME_IMMEDIATELY_AFTER_RELEASE_TO_RUBYGEMS_ORG` with your gem name right after releasing it to RubyGems.org. Please do not do it earlier due to security reasons. Alternatively, replace this section with instructions to install your gem from git if you don't plan to release to RubyGems.org.
-
-Install the gem and add to the application's Gemfile by executing:
-
 ```bash
-bundle add UPDATE_WITH_YOUR_GEM_NAME_IMMEDIATELY_AFTER_RELEASE_TO_RUBYGEMS_ORG
+bundle install        # or ./bin/setup
+npm install          # pulls in Playwright
+npx playwright install chromium  # downloads the browser binaries
 ```
 
-If bundler is not being used to manage dependencies, install the gem by executing:
-
-```bash
-gem install UPDATE_WITH_YOUR_GEM_NAME_IMMEDIATELY_AFTER_RELEASE_TO_RUBYGEMS_ORG
-```
-
-## Usage
-
-PlaywrightLLM wires into a `Logger` out of the box (`INFO` level, `STDOUT`). You can override it by assigning your own logger via `PlaywrightLLM.configure` (or by setting `PlaywrightLLM.logger = logger` directly). Example:
+## Configuration
 
 ```ruby
 require "logger"
+require "ruby_llm"
+require "playwright_llm"
 
 logger = Logger.new($stdout)
 logger.level = Logger::DEBUG
 
+RubyLLM.configure do |config|
+  config.openrouter_api_key = ENV["OPENROUTER_API_KEY"]
+  config.gemini_api_key = ENV["GEMINI_API_KEY"]
+  config.default_model = "google/gemini-2.5-flash-preview-09-2025"
+  config.use_new_acts_as = true
+  config.logger = logger
+end
+
 PlaywrightLLM.configure do |config|
-	config.logger = logger
+  config.logger = logger
+  config.headless = true
+  config.user_agent = ENV["PLAYWRIGHT_LLM_USER_AGENT"]
 end
 ```
 
-You can also tweak how Playwright launches its browser. `headless` defaults to `true`, and `user_agent` is only injected when you explicitly configure it (Playwright otherwise uses its own built-in string). Override them like this:
+- `logger` defaults to an `INFO` logger printing to STDOUT; replace it with your own if you need `DEBUG` or file logging.
+- `headless` defaults to `true`; pass `false` or use `--no-headless` in the CLI to open a visible browser.
+- `user_agent` is optional; if set, it is forwarded to the Node launcher (`PLAYWRIGHT_LLM_USER_AGENT`).
+
+## Using the Agent
 
 ```ruby
-PlaywrightLLM.configure do |config|
-	config.headless = false
-	config.user_agent = "Mozilla/5.0 (Linux; x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-end
+agent = PlaywrightLLM::Agent.from_provider_model(
+  provider: "openrouter",
+  model: "google/gemini-2.5-flash-preview-09-2025"
+)
+agent.launch
+response = agent.ask("Navigate to https://example.com and summarize the header")
+puts response.content
+agent.close
 ```
 
-The CLI scripts respect these settings too: `bin/one_shot.rb` accepts `--[no-]headless` and `--user-agent`, while `bin/playwright-chat.rb` now supports the same flags on the command line (with the previous `PLAYWRIGHT_LLM_USER_AGENT` environment override still available).
+- Always call `agent.launch` before asking so the CDP browser is running.
+- Use `agent.with_instructions(<<~INSTRUCTIONS)` to steer the tool usage before you `launch`.
+- Wrap the agent in a `begin`/`ensure` block so the background browser process is killed even when the prompt raises.
 
-That logger will be reused by agents, browsers, and tools, so all PlaywrightLLM log output follows the handler you provide.
+### Tools
+
+| Tool | Description |
+| --- | --- |
+| `PlaywrightLLM::Tools::Navigate` | Navigates to a URL and logs the HTTP status code. |
+| `PlaywrightLLM::Tools::SlimHtml` | Returns cleaned HTML split in 80 000-character chunks (`page:` selects the chunk). |
+| `PlaywrightLLM::Tools::Click` | Clicks a CSS selector, waits for `networkidle`, and reports the resulting URL/status. |
+| `PlaywrightLLM::Tools::FullHtml` | Extracts the full HTML inside a selector (bodies are blocked to keep payloads manageable). |
+
+All tools depend on the Chromium session started by `js/launcher.js`, which the Ruby browser process creates before the tool scripts run.
+
+If you already maintain a `RubyLLM::Chat` instance—for example, to reuse streaming callbacks—init the agent with `PlaywrightLLM::Agent.from_chat(rubyllm_chat: chat)` so it registers the browser tools on your existing chat client.
+
+## JavaScript helpers
+
+- `js/launcher.js` launches Chromium via Playwright, honors `PLAYWRIGHT_LLM_HEADLESS` and `PLAYWRIGHT_LLM_USER_AGENT`, and keeps the browser alive so Ruby tools can connect over `localhost:9222`.
+- The scripts in `js/tools/` connect with `chromium.connectOverCDP('http://localhost:9222')`, reuse the first context/page, and log helpful `PLWLLM_LOG:` lines that the Ruby helpers forward to the configured `Logger`.
+- `js/slim_html.js` encapsulates the DOM cleanup, pagination, and ID helpers used by the Ruby `SlimHtml` tool.
+
+## CLI
+
+### `bin/one_shot.rb`
+
+- Run `bundle exec ruby bin/one_shot.rb [options] PROMPT` for a single-turn request.
+- Options:
+  - `--provider PROVIDER` (default: `openrouter`).
+  - `--model MODEL` (default: `google/gemini-2.5-flash-preview-09-2025`).
+  - `--[no-]headless` toggles the browser mode.
+  - `--user-agent USER_AGENT` overrides the browser identity.
+- Honors `OPENROUTER_API_KEY`, `GEMINI_API_KEY`, and `PLAYWRIGHT_LLM_USER_AGENT` environment variables.
+- Logs token counts (`input_tokens`, `output_tokens`, `cached_tokens`) when your logger is in `DEBUG`.
+
+### `bin/playwright-chat.rb`
+
+- Starts an interactive chat REPL, letting you craft multi-line prompts (finish with an empty line) and type `exit`/`quit` to end.
+- Accepts the same `--[no-]headless` and `--user-agent` flags and picks sensible defaults if they are omitted.
+- The CLI currently buffers replies until the model finishes; enable the streaming branch manually if you need chunked output.
 
 ## Development
 
-After checking out the repo, run `bin/setup` to install dependencies. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
-
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and the created tag, and push the `.gem` file to [rubygems.org](https://rubygems.org).
-
-## Contributing
-
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/playwright-llm.
+- Run `bin/setup` (= `bundle install`).
+- Use `bin/console` to experiment interactively; bundler and Playwright are already wired in.
+- Update `lib/playwright_llm/version.rb` before a release.
+- Publish with `bundle exec rake release` (builds the gem, tags it, and pushes to RubyGems). Install locally with `bundle exec rake install`.
+- There are no automated tests yet—if you add some, explain how to run them in this README.
 
 ## License
 
-The gem is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).
+MIT (see `LICENSE.txt`).

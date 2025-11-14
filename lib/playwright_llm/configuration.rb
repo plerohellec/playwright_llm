@@ -2,10 +2,9 @@ require "logger"
 
 module PlaywrightLLM
   class Configuration
-    attr_accessor :node_path, :logger, :headless, :user_agent
+    attr_accessor :logger, :headless, :user_agent
 
     def initialize
-      @node_path = '.'
       @logger = Logger.new($stdout)
       @logger.level = Logger::INFO
       @headless = true
