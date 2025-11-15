@@ -43,7 +43,8 @@ async function click() {
       } else {
         const innerText = await targetElement.innerText();
         const truncatedText = innerText.substring(0, 100);
-        console.log(`PLWLLM_LOG: Selector inner text: "${truncatedText}"`);
+        const tagName = await targetElement.evaluate(el => el.tagName.toLowerCase());
+        console.log(`PLWLLM_LOG: Selector type: ${tagName}, inner text: "${truncatedText}"`);
 
         // Click the target element and wait for the page to settle
         await targetElement.click({ timeout: 4000 });

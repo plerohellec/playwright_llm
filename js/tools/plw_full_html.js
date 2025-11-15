@@ -33,6 +33,11 @@ async function extractFullHtml() {
     if (await element.count() === 0) {
       throw new Error(`Selector "${selector}" not found on the page`);
     } else {
+      const innerText = await element.innerText();
+      const truncatedText = innerText.substring(0, 100);
+      const tagName = await element.evaluate(el => el.tagName.toLowerCase());
+      console.log(`PLWLLM_LOG: Selector type: ${tagName}, inner text: "${truncatedText}"`);
+
       // Extract the full HTML inside the selector
       const html = await page.locator(selector).evaluate(el => el.outerHTML);
       if (html.length > 200000) {
