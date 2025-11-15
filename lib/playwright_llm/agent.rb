@@ -31,6 +31,11 @@ module PlaywrightLLM
       self
     end
 
+    def with_tool(tool)
+      @chat = @chat.with_tool(tool)
+      self
+    end
+
     def launch
       @browser_tool = PlaywrightLLM::Browser.new(logger: @logger)
       res = @browser_tool.execute()

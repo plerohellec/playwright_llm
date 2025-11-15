@@ -38,6 +38,10 @@ OptionParser.new do |opts|
   opts.on("--user-agent USER_AGENT", "Custom user agent for Playwright") do |ua|
     options[:user_agent] = ua
   end
+
+  opts.on("--[no-]parallel-search", "Enable the ParallelSearch tool (default: disabled)") do |value|
+    options[:parallel_search] = value
+  end
 end.parse!(ARGV.clone)
 
 provider = 'openrouter'
@@ -77,6 +81,10 @@ agent.with_instructions(<<~INSTRUCTIONS)
   - Pay attention to cookie banners on websites, dismiss them before digging.
   - When clicking with a selector, prefer the id attribute when available.
 INSTRUCTIONS
+
+if options[:parallel_search]
+  agent.with_tool(PlaywrightLLM::Tools::ParallelSearch)
+end
 
 agent.launch
 

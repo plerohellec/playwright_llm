@@ -14,6 +14,8 @@ Playwright::LLM is a Ruby helper that combines the conversational capabilities o
 - **Node.js** (Playwright 1.56.1 prefers Node 18+).
 - **Playwright dependencies.** Run `npm install` and `npx playwright install chromium` so the JavaScript helpers can launch Chromium.
 - **API keys.** Provide `OPENROUTER_API_KEY` and/or `GEMINI_API_KEY` via ENV so the default CLI content providers can talk to OpenRouter or Gemini.
+  If you also want to use the Parallel.ai web search tool, set `PARALLEL_API_KEY` in your environment. This key is used by the `PlaywrightLLM::Tools::ParallelSearch` tool to call `https://api.parallel.ai/v1beta/search`.
+	You must add this tool to the agent manually.
 
 ## Installation
 
@@ -77,6 +79,7 @@ agent.close
 | `PlaywrightLLM::Tools::SlimHtml` | Returns cleaned HTML split in 80 000-character chunks (`page:` selects the chunk). |
 | `PlaywrightLLM::Tools::Click` | Clicks a CSS selector, waits for `networkidle`, and reports the resulting URL/status. |
 | `PlaywrightLLM::Tools::FullHtml` | Extracts the full HTML inside a selector (bodies are blocked to keep payloads manageable). |
+| `PlaywrightLLM::Tools::ParallelSearch` | Calls the Parallel.ai search API with a single search query and returns structured JSON results. Not included by default.|
 
 All tools depend on the Chromium session started by `js/launcher.js`, which the Ruby browser process creates before the tool scripts run.
 
