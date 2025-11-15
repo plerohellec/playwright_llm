@@ -2,7 +2,7 @@ const { chromium } = require('playwright');
 const { cleanHtml, trimWhitespaces, paginateHtml } = require('../slim_html.js');
 
 async function slimHtml() {
-  const pageNumber = parseInt(process.argv[2]) || 1;
+  const chunkNumber = parseInt(process.argv[2]) || 1;
 
   const browser = await chromium.connectOverCDP('http://localhost:9222');
   console.debug('Connected to browser');
@@ -27,8 +27,8 @@ async function slimHtml() {
 
     const cleanedHtml = await page.evaluate(cleanHtml);
     const finalHtml = trimWhitespaces(cleanedHtml);
-    console.log('Will return page', pageNumber);
-    const output = paginateHtml(finalHtml, pageNumber);
+    console.log('Will return chunk', chunkNumber);
+    const output = paginateHtml(finalHtml, chunkNumber);
 
     console.log(`page url: ${page.url()}`);
     console.log(output);
