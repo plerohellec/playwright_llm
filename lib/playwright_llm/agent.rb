@@ -16,6 +16,9 @@ module PlaywrightLLM
         @chat = rubyllm_chat
       end
       @browser_tool = nil
+      @tool_call_history = []
+      @last_tool = nil
+      @consecutive_count = 0
     end
 
     def self.from_chat(rubyllm_chat:)
@@ -47,7 +50,10 @@ module PlaywrightLLM
                 PlaywrightLLM::Tools::Click,
                 PlaywrightLLM::Tools::FullHtml,
                 PlaywrightLLM::Tools::SearchForm ]
-      @chat = @chat.with_tools(*tools).on_tool_call { |tool_call| fix_tool_call(tool_call) }
+      @chat = @chat.with_tools(*tools).on_tool_call do |tool_call|
+        fix_tool_call(tool_call)
+        track_tool_call(tool_call)
+      end
     end
 
     def ask(prompt)
@@ -69,6 +75,21 @@ module PlaywrightLLM
         @logger.warn "Renaming tool call from #{tool_call.name} to #{tool_call.name.gsub('tools__', 'tools--')}"
         tool_call.name.gsub!('tools__', 'tools--')
       end
+    end
+
+    def track_tool_call(tool_call)
+      if tool_call.name == @last_tool
+        @consecutive_count += 1
+      else
+        @last_tool = tool_call.name
+        @consecutive_count = 1
+      end
+
+      if @consecutive_count > 5
+        raise RuntimeError, "You must not call the same tool more than 5 times in a row"
+      end
+
+      @tool_call_history << tool_call.name
     end
   end
 end
