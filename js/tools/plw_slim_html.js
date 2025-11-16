@@ -5,7 +5,6 @@ async function slimHtml() {
   const chunkNumber = parseInt(process.argv[2]) || 1;
 
   const browser = await chromium.connectOverCDP('http://localhost:9222');
-  console.debug('Connected to browser');
   let exitCode = 0;
   try {
     const contexts = browser.contexts();

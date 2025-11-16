@@ -10,7 +10,6 @@ async function navigate() {
   }
 
   const browser = await chromium.connectOverCDP('http://localhost:9222');
-  console.log('Connected to browser');
   let exitCode = 0;
   try {
     const contexts = browser.contexts();

@@ -28,8 +28,20 @@ const parseHeadless = () => {
   }
   const context = await browser.newContext(contextOptions);
   const page = await context.newPage();
-
   console.log('{ "status_code": 200 }');
+
+  await page.route('**/*', route => {
+    const url = route.request().url();
+    if (url.includes('doubleclick.net') ||
+        url.includes('googlesyndication.com') ||
+        url.includes('google-analytics.com') ||
+        url.includes('/ads/') ||
+        url.endsWith('.gif')) {
+      route.abort();
+    } else {
+      route.continue();
+    }
+  });
 
   // keep the process alive indefinitely
   // Handle termination signals to close browser gracefully
