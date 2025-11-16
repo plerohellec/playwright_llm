@@ -10,7 +10,6 @@ async function navigate() {
   }
 
   const browser = await chromium.connectOverCDP('http://localhost:9222');
-  console.log('Connected to browser');
   let exitCode = 0;
   try {
     const contexts = browser.contexts();
@@ -25,6 +24,11 @@ async function navigate() {
     }
     const page = pages[0];
     await page.emulateMedia({ colorScheme: 'dark' });
+
+    page.on('requestfailed', request => {
+      console.log('PLWLLM_LOG: Request failed:', request.url());
+      console.log('PLWLLM_LOG: Failure reason:', request.failure().errorText);
+    });
 
     console.log('Navigating to:', url);
     const response = await page.goto(url, { waitUntil: 'load', timeout: 12000 });
@@ -51,7 +55,20 @@ async function navigate() {
 
     console.log('Page loaded');
 
-    await page.evaluate(addVpsbIds);
+    // Check if page is still open before evaluating
+    if (page.isClosed()) {
+      console.warn('PLWLLM_LOG: Page was closed before evaluation, skipping addVpsbIds');
+    } else {
+      try {
+        await page.evaluate(addVpsbIds);
+      } catch (error) {
+        if (error.message.includes('Target page, context or browser has been closed')) {
+          console.warn('PLWLLM_LOG: Page closed during evaluation, but navigation may have succeeded');
+        } else {
+          throw error; // Re-throw other errors
+        }
+      }
+    }
 
     console.log(JSON.stringify({ "status_code": response.status() }));
   } catch (error) {

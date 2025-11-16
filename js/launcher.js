@@ -15,9 +15,13 @@ const parseHeadless = () => {
   const headless = parseHeadless();
   const userAgent = process.env.PLAYWRIGHT_LLM_USER_AGENT;
 
-  const browser = await chromium.launch({
-    headless,
-    args: ['--remote-debugging-port=9222']
+  const userDataDir = '/home/philippe/.config/google-chrome/Default';
+  const browser = await chromium.launchPersistentContext(userDataDir, {
+    executablePath: '/usr/bin/google-chrome-stable',
+    headless: false,
+    args: [
+      '--remote-debugging-port=9222',
+    ]
   });
 
   const contextOptions = {
@@ -26,8 +30,9 @@ const parseHeadless = () => {
   if (userAgent) {
     contextOptions.userAgent = userAgent;
   }
-  const context = await browser.newContext(contextOptions);
-  const page = await context.newPage();
+
+  // const context = await browser.newContext(contextOptions);
+  const page = await browser.newPage();
 
   console.log('{ "status_code": 200 }');
 

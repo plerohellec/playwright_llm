@@ -28,7 +28,7 @@ class PlaywrightLLM::Browser
     status_code = nil
 
     begin
-      Timeout.timeout(15) do  # wait up to 15 seconds for the response
+      Timeout.timeout(60) do  # wait up to 15 seconds for the response
         while line = stdout.gets
           output += line
           if output.include?('status_code')
