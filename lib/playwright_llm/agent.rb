@@ -45,7 +45,8 @@ module PlaywrightLLM
       tools = [ PlaywrightLLM::Tools::Navigate,
                 PlaywrightLLM::Tools::SlimHtml,
                 PlaywrightLLM::Tools::Click,
-                PlaywrightLLM::Tools::FullHtml ]
+                PlaywrightLLM::Tools::FullHtml,
+                PlaywrightLLM::Tools::SearchForm ]
       @chat = @chat.with_tools(*tools).on_tool_call { |tool_call| fix_tool_call(tool_call) }
     end
 
