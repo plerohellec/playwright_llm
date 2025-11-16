@@ -60,10 +60,6 @@ RubyLLM.configure do |config|
   config.logger = logger
 end
 
-agent = PlaywrightLLM::Agent.from_provider_model(provider:, model:)
-# chat = RubyLLM::Chat.new(model: model, provider: provider)
-# agent = PlaywrightLLM::Agent.from_chat(rubyllm_chat: chat)
-
 user_agent = options[:user_agent] || ENV['PLAYWRIGHT_LLM_USER_AGENT'] || "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
 headless = options.key?(:headless) ? options[:headless] : true
 
@@ -73,6 +69,11 @@ PlaywrightLLM.configure do |config|
   config.user_agent = user_agent
 end
 
+agent = PlaywrightLLM::Agent.from_provider_model(provider:, model:)
+# chat = RubyLLM::Chat.new(model: model, provider: provider)
+# agent = PlaywrightLLM::Agent.from_chat(rubyllm_chat: chat)
+
+
 streaming = false
 
 agent.with_instructions(<<~INSTRUCTIONS)
@@ -80,6 +81,9 @@ agent.with_instructions(<<~INSTRUCTIONS)
   Follow these guidelines when using the browser tools:
   - Pay attention to cookie banners on websites, dismiss them before digging.
   - When clicking with a selector, prefer the id attribute when available.
+  - Do not ask for the full html of anything unless you absolutely have to.
+  - Never include p or span elements in your selectors.
+
 INSTRUCTIONS
 
 if options[:parallel_search]
