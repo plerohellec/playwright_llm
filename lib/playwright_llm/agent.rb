@@ -2,6 +2,8 @@
 
 module PlaywrightLLM
   class Agent
+    Response = Struct.new(:content)
+
     def initialize(rubyllm_chat: nil, provider: nil, model: nil)
       @logger = PlaywrightLLM.logger
       if rubyllm_chat.nil?
@@ -57,7 +59,85 @@ module PlaywrightLLM
     end
 
     def ask(prompt)
-      @chat.ask(prompt)
+      case prompt
+      when '/debug'
+        debugger
+      when '/chat_summary'
+        Response.new(chat_summary)
+      when '/trim_messages'
+        stats = trim_messages
+        Response.new({ success: "Messages trimmed", stats: stats })
+      else
+        @chat.ask(prompt)
+      end
+    end
+
+    def chat_summary
+      messages = @chat.messages.map { |msg| msg.to_h }
+      messages.map do |msg_data|
+        { role: msg_data[:role],
+          content: msg_data[:content][0, 100],
+          tool_calls: msg_data[:tool_calls] ? msg_data[:tool_calls].map { |id, call| call.name } : nil,
+          input_tokens: msg_data[:input_tokens]
+        }
+      end
+    end
+
+    def trim_messages
+      messages = @chat.messages
+      keep_messages = []
+
+      # Add system message
+      system_msg = messages.find { |m| m.role == :system }
+      keep_messages << system_msg if system_msg
+
+      # Add all user messages
+      users = messages.select { |m| m.role == :user }
+      keep_messages.concat(users)
+
+      # Find tool pairs
+      assistants_with_tools = messages.select { |m| m.role == :assistant && m.tool_calls && !m.tool_calls.empty? }
+      pairs = []
+      assistants_with_tools.each do |ass|
+        idx = messages.index(ass)
+        next_msg = messages[idx + 1]
+        if next_msg && next_msg.role == :tool
+          name = ass.tool_calls.values.first.name
+          pairs << { assistant: ass, tool: next_msg, name: name, index: idx }
+        end
+      end
+
+      # Classify successful and failed
+      successful = pairs.reject { |p| p[:tool].content =~ /^\{.?error/ }
+      failed = pairs.select { |p| p[:tool].content =~ /^\{.?error/ }
+
+      # Last successful per name
+      successful_by_name = successful.group_by { |p| p[:name] }
+      last_successful = successful_by_name.map { |name, ps| ps.max_by { |p| p[:index] } }
+
+      # Last failed
+      last_failed = failed.last
+
+      # Collect keep_pairs
+      keep_pairs = last_successful + [last_failed].compact
+
+      # Add tool pairs to keep_messages
+      keep_pairs.each do |p|
+        keep_messages << p[:assistant]
+        keep_messages << p[:tool]
+      end
+
+      # Always keep the last assistant message
+      last_assistant = messages.reverse.find { |m| m.role == :assistant }
+      keep_messages << last_assistant if last_assistant && !keep_messages.include?(last_assistant)
+
+      # Sort by original order and remove duplicates
+      keep_messages.sort_by! { |m| messages.index(m) }
+      keep_messages.uniq!
+
+      @chat.messages.replace(keep_messages)
+
+      { before: messages.size, after: keep_messages.size }
     end
 
     def close
