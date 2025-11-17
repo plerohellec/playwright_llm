@@ -84,6 +84,7 @@ agent.with_instructions(<<~INSTRUCTIONS)
   - When clicking with a selector, prefer the id attribute when available.
   - Do not ask for the full html of anything unless you absolutely have to. Always call the slim_html tool first and only call full_html if the slimmed down version does not contain the information you need.
   - The css selectors you give tools must never include p or span tags.
+  - You must not call the same tool more than 10 times in a row.
 
 INSTRUCTIONS
 

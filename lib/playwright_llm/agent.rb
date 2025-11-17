@@ -53,7 +53,7 @@ module PlaywrightLLM
                 PlaywrightLLM::Tools::SearchForm ]
       @chat = @chat.with_tools(*tools).on_tool_call do |tool_call|
         fix_tool_call(tool_call)
-        # track_tool_call(tool_call)
+        track_tool_call(tool_call)
         trim_messages_if_needed
       end
     end
@@ -89,6 +89,7 @@ module PlaywrightLLM
       if @chat.messages.size > max_messages
         stats = trim_messages
         @logger.info "Trimmed chat messages: #{stats[:before]} -> #{stats[:after]}"
+        @logger.debug "Current messages after trimming: #{chat_summary.inspect}"
       end
     end
 
@@ -191,8 +192,8 @@ module PlaywrightLLM
         @consecutive_count = 1
       end
 
-      if @consecutive_count > 5
-        raise RuntimeError, "You must not call the same tool more than 5 times in a row"
+      if @consecutive_count > 10
+        raise RuntimeError, "Can't call the same tool more than 10 times in a row"
       end
     end
   end
