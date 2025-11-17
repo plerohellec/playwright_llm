@@ -18,7 +18,6 @@ module PlaywrightLLM
         @chat = rubyllm_chat
       end
       @browser_tool = nil
-      @tool_call_history = []
       @last_tool = nil
       @consecutive_count = 0
     end
@@ -54,7 +53,8 @@ module PlaywrightLLM
                 PlaywrightLLM::Tools::SearchForm ]
       @chat = @chat.with_tools(*tools).on_tool_call do |tool_call|
         fix_tool_call(tool_call)
-        track_tool_call(tool_call)
+        # track_tool_call(tool_call)
+        trim_messages_if_needed
       end
     end
 
@@ -62,6 +62,7 @@ module PlaywrightLLM
       case prompt
       when '/debug'
         debugger
+        Response.new("Debugger session completed")
       when '/chat_summary'
         Response.new(chat_summary)
       when '/trim_messages'
@@ -83,8 +84,17 @@ module PlaywrightLLM
       end
     end
 
+    def trim_messages_if_needed
+      max_messages = 12
+      if @chat.messages.size > max_messages
+        stats = trim_messages
+        @logger.info "Trimmed chat messages: #{stats[:before]} -> #{stats[:after]}"
+      end
+    end
+
     def trim_messages
       messages = @chat.messages
+      before_messages_count = messages.size
       keep_messages = []
 
       # Add system message
@@ -118,8 +128,24 @@ module PlaywrightLLM
       # Last failed
       last_failed = failed.last
 
-      # Collect keep_pairs
-      keep_pairs = last_successful + [last_failed].compact
+      # Special handling for playwright_llm--tools--slim_html
+      if pairs.last && pairs.last[:name] == "playwright_llm--tools--slim_html"
+        consecutive_slim = []
+        pairs.reverse_each do |p|
+          if p[:name] == "playwright_llm--tools--slim_html"
+            consecutive_slim << p
+          else
+            break
+          end
+        end
+        # Remove the last_successful for slim_html
+        last_successful.reject! { |p| p[:name] == "playwright_llm--tools--slim_html" }
+        # Collect keep_pairs including consecutive slim
+        keep_pairs = last_successful + [last_failed].compact + consecutive_slim
+      else
+        # Collect keep_pairs
+        keep_pairs = last_successful + [last_failed].compact
+      end
 
       # Add tool pairs to keep_messages
       keep_pairs.each do |p|
@@ -137,7 +163,7 @@ module PlaywrightLLM
 
       @chat.messages.replace(keep_messages)
 
-      { before: messages.size, after: keep_messages.size }
+      { before: before_messages_count, after: keep_messages.size }
     end
 
     def close
@@ -168,8 +194,6 @@ module PlaywrightLLM
       if @consecutive_count > 5
         raise RuntimeError, "You must not call the same tool more than 5 times in a row"
       end
-
-      @tool_call_history << tool_call.name
     end
   end
 end
