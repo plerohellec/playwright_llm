@@ -78,7 +78,7 @@ module PlaywrightLLM
       messages.map do |msg_data|
         { role: msg_data[:role],
           content: msg_data[:content][0, 100],
-          tool_calls: msg_data[:tool_calls] ? msg_data[:tool_calls].map { |id, call| call.name } : nil,
+          tool_calls: msg_data[:tool_calls] ? msg_data[:tool_calls].map { |id, call| [ call.name, call.arguments ] } : nil,
           input_tokens: msg_data[:input_tokens]
         }
       end
@@ -95,76 +95,32 @@ module PlaywrightLLM
 
     def trim_messages
       messages = @chat.messages
-      before_messages_count = messages.size
-      keep_messages = []
+      before_count = messages.size
+      keep = []
 
-      # Add system message
+      # Keep first system message
       system_msg = messages.find { |m| m.role == :system }
-      keep_messages << system_msg if system_msg
+      keep << system_msg if system_msg
 
-      # Add all user messages
+      # Keep first and last user messages
       users = messages.select { |m| m.role == :user }
-      keep_messages.concat(users)
-
-      # Find tool pairs
-      assistants_with_tools = messages.select { |m| m.role == :assistant && m.tool_calls && !m.tool_calls.empty? }
-      pairs = []
-      assistants_with_tools.each do |ass|
-        idx = messages.index(ass)
-        next_msg = messages[idx + 1]
-        if next_msg && next_msg.role == :tool
-          name = ass.tool_calls.values.first.name
-          pairs << { assistant: ass, tool: next_msg, name: name, index: idx }
-        end
+      if users.any?
+        keep << users.first
+        keep << users.last if users.size > 1
       end
 
-      # Classify successful and failed
-      successful = pairs.reject { |p| p[:tool].content =~ /^\{.?error/ }
-      failed = pairs.select { |p| p[:tool].content =~ /^\{.?error/ }
-
-      # Last successful per name
-      successful_by_name = successful.group_by { |p| p[:name] }
-      last_successful = successful_by_name.map { |name, ps| ps.max_by { |p| p[:index] } }
-
-      # Last failed
-      last_failed = failed.last
-
-      # Special handling for playwright_llm--tools--slim_html
-      if pairs.last && pairs.last[:name] == "playwright_llm--tools--slim_html"
-        consecutive_slim = []
-        pairs.reverse_each do |p|
-          if p[:name] == "playwright_llm--tools--slim_html"
-            consecutive_slim << p
-          else
-            break
-          end
-        end
-        # Remove the last_successful for slim_html
-        last_successful.reject! { |p| p[:name] == "playwright_llm--tools--slim_html" }
-        # Collect keep_pairs including consecutive slim
-        keep_pairs = last_successful + [last_failed].compact + consecutive_slim
-      else
-        # Collect keep_pairs
-        keep_pairs = last_successful + [last_failed].compact
-      end
-
-      # Add tool pairs to keep_messages
-      keep_pairs.each do |p|
-        keep_messages << p[:assistant]
-        keep_messages << p[:tool]
-      end
-
-      # Always keep the last assistant message
-      last_assistant = messages.reverse.find { |m| m.role == :assistant }
-      keep_messages << last_assistant if last_assistant && !keep_messages.include?(last_assistant)
+      # Keep last 7 assistant or tool messages
+      assistant_tool = messages.each_with_index.select { |m, i| m.role == :assistant || m.role == :tool }.map { |m, i| { msg: m, index: i } }
+      last_seven = assistant_tool.last(7)
+      last_seven.each { |item| keep << item[:msg] }
 
       # Sort by original order and remove duplicates
-      keep_messages.sort_by! { |m| messages.index(m) }
-      keep_messages.uniq!
+      keep.sort_by! { |m| messages.index(m) }
+      keep.uniq!
 
-      @chat.messages.replace(keep_messages)
+      @chat.messages.replace(keep)
 
-      { before: before_messages_count, after: keep_messages.size }
+      { before: before_count, after: keep.size }
     end
 
     def close
@@ -178,9 +134,9 @@ module PlaywrightLLM
       @logger.debug "    with params #{tool_call.arguments}\n"
 
       # Gemini tends to mess up with the tool names by replacing '--' with '__'
-      if tool_call.name =~ /^tools__/
+      if tool_call.name =~ /tools__/
         @logger.warn "Renaming tool call from #{tool_call.name} to #{tool_call.name.gsub('tools__', 'tools--')}"
-        tool_call.name.gsub!('tools__', 'tools--')
+        tool_call.name.gsub!('__', '--')
       end
     end
 

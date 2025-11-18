@@ -1,6 +1,6 @@
 class PlaywrightLLM::Tools::SlimHtml < RubyLLM::Tool
   description "Uses the browser that was opened before to extract slimmed down HTML by removing scripts, styles, and cleaning attributes. Returns the cleaned HTML content one chunk at a time. Pass a chunk number to retrieve a specific chunk."
-  param :chunk, desc: "The chunk number", required: false
+  param :chunk, desc: "The chunk number (the first chunk is 1)", required: false
 
   def execute(chunk: 1)
     logger = PlaywrightLLM.logger
