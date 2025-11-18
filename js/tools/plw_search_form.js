@@ -28,48 +28,47 @@ async function searchForm() {
     // Check if the form exists
     const form = page.locator(`#${formId}`);
     if (!(await form.count())) {
-      console.error(`Form with id "${formId}" not found on the page`);
-      exitCode = 1;
+      throw new Error (`Form with id "${formId}" not found on the page`);
+    }
+
+    // Find the input inside the form
+    const input = form.locator('input[type="text"], input[type="search"], input:not([type])').first();
+    if (!(await input.count())) {
+      throw new Error(`No suitable input found in form "${formId}"`);
+    }
+
+    // Fill the input
+    await input.fill(searchTerm);
+    console.log(`PLWLLM_LOG: Filled input with "${searchTerm}"`);
+
+    // Submit the form by clicking the submit button or submitting the form
+    const submitButton = form.locator('input[type="submit"], button[type="submit"]').first();
+    if (await submitButton.count()) {
+      await submitButton.click({ timeout: 4000 });
     } else {
-      // Find the input inside the form
-      const input = form.locator('input[type="text"], input[type="search"], input:not([type])').first();
-      if (!(await input.count())) {
-        console.error(`No suitable input found in form "${formId}"`);
-        exitCode = 1;
+      await form.evaluate(form => form.submit());
+    }
+
+    // Wait for the page to settle
+    try {
+      await page.waitForLoadState('networkidle', { timeout: 5000 });
+    } catch (err) {
+      if (err && err.name === 'TimeoutError') {
+        const readyState = await page.evaluate(() => document.readyState);
+        if (readyState !== 'complete' && readyState !== 'interactive') {
+          throw new Error(
+            `Timed out waiting for networkidle (5s); document.readyState='${readyState}'`
+          );
+        }
+        console.warn('PLWLLM_LOG: Timed out waiting for networkidle, but document.readyState is complete or interactive — continuing.');
       } else {
-        // Fill the input
-        await input.fill(searchTerm);
-        console.log(`PLWLLM_LOG: Filled input with "${searchTerm}"`);
-
-        // Submit the form by clicking the submit button or submitting the form
-        const submitButton = form.locator('input[type="submit"], button[type="submit"]').first();
-        if (await submitButton.count()) {
-          await submitButton.click({ timeout: 4000 });
-        } else {
-          await form.evaluate(form => form.submit());
-        }
-
-        // Wait for the page to settle
-        try {
-          await page.waitForLoadState('networkidle', { timeout: 5000 });
-        } catch (err) {
-          if (err && err.name === 'TimeoutError') {
-            const readyState = await page.evaluate(() => document.readyState);
-            if (readyState !== 'complete') {
-              throw new Error(
-                `Timed out waiting for networkidle (5s); document.readyState='${readyState}'`
-              );
-            }
-            console.warn('PLWLLM_LOG: Timed out waiting for networkidle, but document.readyState is complete — continuing.');
-          } else {
-            throw err;
-          }
-        }
-        await page.evaluate(addVpsbIds);
-
-        console.log(JSON.stringify({ "status_code": 200, url: page.url() }));
+        throw err;
       }
     }
+
+    await page.evaluate(addVpsbIds);
+
+    console.log(JSON.stringify({ "status_code": 200, url: page.url() }));
   } catch (error) {
     console.error(`Error during searching in form "${formId}":`, error);
     exitCode = 1;

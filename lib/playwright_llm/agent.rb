@@ -89,7 +89,7 @@ module PlaywrightLLM
       if @chat.messages.size > max_messages
         stats = trim_messages
         @logger.info "Trimmed chat messages: #{stats[:before]} -> #{stats[:after]}"
-        @logger.debug "Current messages after trimming: #{chat_summary.inspect}"
+        @logger.debug "Current messages after trimming: #{JSON.pretty_generate(chat_summary)}"
       end
     end
 
