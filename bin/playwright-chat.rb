@@ -23,9 +23,9 @@ class LogFormatter
   end
 end
 
-logger = Logger.new(STDOUT)
+logger = Logger.new(File.join(__dir__, '../playwright_chat.log'))
 logger.formatter = LogFormatter.new
-logger.level = Logger::INFO
+logger.level = Logger::DEBUG
 
 options = {}
 OptionParser.new do |opts|

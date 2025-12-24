@@ -20,7 +20,7 @@ logger.formatter = LogFormatter.new
 logger.level = Logger::INFO
 
 options = {}
-OptionParser.new do |opts|
+parser = OptionParser.new do |opts|
   opts.banner = "Usage: one_shot.rb [options] PROMPT"
 
   opts.on("--provider PROVIDER", "Provider (default: openrouter)") do |p|
@@ -38,11 +38,13 @@ OptionParser.new do |opts|
   opts.on("--user-agent USER_AGENT", "Custom user agent string for Playwright") do |ua|
     options[:user_agent] = ua
   end
-end.parse!
+end
+parser.parse!
 
 prompt = ARGV.join(' ')
 if prompt.empty?
   puts "Error: PROMPT is required"
+  puts parser.help
   exit 1
 end
 
@@ -67,8 +69,8 @@ PlaywrightLLM.configure do |config|
 end
 
 begin
-  agent = PlaywrightLLM::Agent.new(provider: provider, model: model)
-  res = agent.start
+  agent = PlaywrightLLM::Agent.from_provider_model(provider: provider, model: model)
+  res = agent.launch
   puts "Agent started with provider=#{provider}, model=#{model}"
 
   response = agent.ask(prompt)
