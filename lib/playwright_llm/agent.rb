@@ -4,8 +4,10 @@ module PlaywrightLLM
   class Agent
     Response = Struct.new(:content)
     MAX_TOTAL_TOOL_CALLS = 100
+    TRIMMING_THRESHOLD = 12
+    KEEP_TOOL_CALLS = 10
 
-    def initialize(rubyllm_chat: nil, provider: nil, model: nil, trimming_threshold: 12, max_total_tool_calls: MAX_TOTAL_TOOL_CALLS)
+    def initialize(rubyllm_chat: nil, provider: nil, model: nil, trimming_threshold: TRIMMING_THRESHOLD, max_total_tool_calls: MAX_TOTAL_TOOL_CALLS)
       @logger = PlaywrightLLM.logger
       if rubyllm_chat.nil?
         raise ArgumentError, 'provider must be provided' if provider.nil?
@@ -30,8 +32,8 @@ module PlaywrightLLM
       new(rubyllm_chat: rubyllm_chat)
     end
 
-    def self.from_provider_model(provider:, model:)
-      new(provider: provider, model: model)
+    def self.from_provider_model(provider:, model:, trimming_threshold: TRIMMING_THRESHOLD, max_total_tool_calls: MAX_TOTAL_TOOL_CALLS)
+      new(provider: provider, model: model, trimming_threshold: trimming_threshold, max_total_tool_calls: max_total_tool_calls)
     end
 
     def with_instructions(instructions)
@@ -113,10 +115,10 @@ module PlaywrightLLM
         keep << users.last if users.size > 1
       end
 
-      # Keep last 7 assistant or tool messages
+      # Keep last KEEP_TOOL_CALLS assistant or tool messages
       assistant_tool = messages.each_with_index.select { |m, i| m.role == :assistant || m.role == :tool }.map { |m, i| { msg: m, index: i } }
-      last_seven = assistant_tool.last(7)
-      last_seven.each { |item| keep << item[:msg] }
+      tool_calls = assistant_tool.last(KEEP_TOOL_CALLS)
+      tool_calls.each { |item| keep << item[:msg] }
 
       # Sort by original order and remove duplicates
       keep.sort_by! { |m| messages.index(m) }
