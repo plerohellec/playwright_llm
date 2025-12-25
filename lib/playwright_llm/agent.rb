@@ -4,7 +4,7 @@ module PlaywrightLLM
   class Agent
     Response = Struct.new(:content)
     MAX_TOTAL_TOOL_CALLS = 100
-    TRIMMING_THRESHOLD = 12
+    TRIMMING_THRESHOLD = 15
     KEEP_TOOL_CALLS = 10
 
     def initialize(rubyllm_chat: nil, provider: nil, model: nil, trimming_threshold: TRIMMING_THRESHOLD, max_total_tool_calls: MAX_TOTAL_TOOL_CALLS)
