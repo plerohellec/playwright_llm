@@ -8,6 +8,7 @@ require_relative "playwright_llm/configuration"
 module PlaywrightLLM
   class Error < StandardError; end
   class BrowserLaunchError < StandardError; end
+  class TooManyToolCallsError < StandardError; end
 
   class << self
     def configure

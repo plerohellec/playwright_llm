@@ -3,8 +3,9 @@
 module PlaywrightLLM
   class Agent
     Response = Struct.new(:content)
+    MAX_TOTAL_TOOL_CALLS = 100
 
-    def initialize(rubyllm_chat: nil, provider: nil, model: nil, trimming_threshold: 12)
+    def initialize(rubyllm_chat: nil, provider: nil, model: nil, trimming_threshold: 12, max_total_tool_calls: MAX_TOTAL_TOOL_CALLS)
       @logger = PlaywrightLLM.logger
       if rubyllm_chat.nil?
         raise ArgumentError, 'provider must be provided' if provider.nil?
@@ -20,7 +21,9 @@ module PlaywrightLLM
       @browser_tool = nil
       @last_tool = nil
       @consecutive_count = 0
+      @total_tool_calls = 0
       @trimming_threshold = trimming_threshold
+      @max_total_tool_calls = max_total_tool_calls
     end
 
     def self.from_chat(rubyllm_chat:)
@@ -142,6 +145,11 @@ module PlaywrightLLM
     end
 
     def track_tool_call(tool_call)
+      @total_tool_calls += 1
+      if @total_tool_calls > @max_total_tool_calls
+        raise PlaywrightLLM::TooManyToolCallsError, "Total tool calls limit reached (#{@max_total_tool_calls})"
+      end
+
       if tool_call.name == @last_tool
         @consecutive_count += 1
       else
