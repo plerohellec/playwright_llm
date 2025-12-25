@@ -4,7 +4,7 @@ module PlaywrightLLM
   class Agent
     Response = Struct.new(:content)
 
-    def initialize(rubyllm_chat: nil, provider: nil, model: nil)
+    def initialize(rubyllm_chat: nil, provider: nil, model: nil, trimming_threshold: 12)
       @logger = PlaywrightLLM.logger
       if rubyllm_chat.nil?
         raise ArgumentError, 'provider must be provided' if provider.nil?
@@ -20,6 +20,7 @@ module PlaywrightLLM
       @browser_tool = nil
       @last_tool = nil
       @consecutive_count = 0
+      @trimming_threshold = trimming_threshold
     end
 
     def self.from_chat(rubyllm_chat:)
@@ -85,7 +86,7 @@ module PlaywrightLLM
     end
 
     def trim_messages_if_needed
-      max_messages = 12
+      max_messages = @trimming_threshold
       if @chat.messages.size > max_messages
         stats = trim_messages
         @logger.info "Trimmed chat messages: #{stats[:before]} -> #{stats[:after]}"
