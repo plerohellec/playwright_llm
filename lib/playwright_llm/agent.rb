@@ -5,7 +5,6 @@ module PlaywrightLLM
     Response = Struct.new(:content)
     MAX_TOTAL_TOOL_CALLS = 100
     TRIMMING_THRESHOLD = 15
-    KEEP_TOOL_CALLS = 10
 
     def initialize(rubyllm_chat: nil, provider: nil, model: nil, trimming_threshold: TRIMMING_THRESHOLD, max_total_tool_calls: MAX_TOTAL_TOOL_CALLS)
       @logger = PlaywrightLLM.logger
@@ -28,8 +27,8 @@ module PlaywrightLLM
       @max_total_tool_calls = max_total_tool_calls
     end
 
-    def self.from_chat(rubyllm_chat:)
-      new(rubyllm_chat: rubyllm_chat)
+    def self.from_chat(rubyllm_chat:, trimming_threshold: TRIMMING_THRESHOLD, max_total_tool_calls: MAX_TOTAL_TOOL_CALLS)
+      new(rubyllm_chat: rubyllm_chat, trimming_threshold: trimming_threshold, max_total_tool_calls: max_total_tool_calls)
     end
 
     def self.from_provider_model(provider:, model:, trimming_threshold: TRIMMING_THRESHOLD, max_total_tool_calls: MAX_TOTAL_TOOL_CALLS)
@@ -115,10 +114,37 @@ module PlaywrightLLM
         keep << users.last if users.size > 1
       end
 
-      # Keep last KEEP_TOOL_CALLS assistant or tool messages
-      assistant_tool = messages.each_with_index.select { |m, i| m.role == :assistant || m.role == :tool }.map { |m, i| { msg: m, index: i } }
-      tool_calls = assistant_tool.last(KEEP_TOOL_CALLS)
-      tool_calls.each { |item| keep << item[:msg] }
+
+      keep_tool_calls = (@trimming_threshold - 4)
+      keep_tool_call_pairs = keep_tool_calls / 2
+
+      # Build pairs of assistant tool calls and their corresponding tool responses
+      pairs = []
+      i = 0
+      while i < messages.size
+        if messages[i].role == :assistant && messages[i].tool_calls && messages[i].tool_calls.any?
+          # Found an assistant message with tool calls
+          pair = [messages[i]]
+          # Look for the next tool response
+          if i + 1 < messages.size && messages[i + 1].role == :tool
+            pair << messages[i + 1]
+            i += 2
+          else
+            i += 1
+          end
+          pairs << pair
+        elsif messages[i].role == :tool
+          # Tool response without preceding assistant call (shouldn't happen, but handle it)
+          pairs << [messages[i]]
+          i += 1
+        else
+          i += 1
+        end
+      end
+
+      # Keep the last keep_tool_call_pairs pairs (each pair counts as 1 even if it has 2 messages)
+      kept_pairs = pairs.last(keep_tool_call_pairs)
+      kept_pairs.each { |pair| pair.each { |msg| keep << msg } }
 
       # Sort by original order and remove duplicates
       keep.sort_by! { |m| messages.index(m) }
