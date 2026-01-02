@@ -174,8 +174,11 @@ module PlaywrightLLM
 
     def track_tool_call(tool_call)
       @total_tool_calls += 1
+      @logger.info "Total tool calls so far: #{@total_tool_calls}"
       if @total_tool_calls > @max_total_tool_calls
-        raise PlaywrightLLM::TooManyToolCallsError, "Total tool calls limit reached (#{@max_total_tool_calls})"
+        err = "Total tool calls limit reached (#{@max_total_tool_calls})"
+        @logger.error err
+        raise PlaywrightLLM::TooManyToolCallsError, err
       end
 
       if tool_call.name == @last_tool
@@ -186,7 +189,9 @@ module PlaywrightLLM
       end
 
       if @consecutive_count > 10
-        raise RuntimeError, "Can't call the same tool more than 10 times in a row"
+        err = "Can't call the same tool more than 10 times in a row"
+        @logger.error err
+        raise RuntimeError, err
       end
     end
   end
