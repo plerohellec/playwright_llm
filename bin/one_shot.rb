@@ -69,21 +69,16 @@ PlaywrightLLM.configure do |config|
 end
 
 begin
-  agent = PlaywrightLLM::Agent.from_provider_model(provider: provider, model: model)
+  agent = PlaywrightLLM::Agent.from_provider_model(provider: provider, model: model, trimming_threshold: nil)
   res = agent.launch
   puts "Agent started with provider=#{provider}, model=#{model}"
 
   response = agent.ask(prompt)
   puts response.content
   puts "\n"
-  input_tokens = response.input_tokens   # Tokens in the prompt sent TO the model
-  output_tokens = response.output_tokens # Tokens in the response FROM the model
-  cached_tokens = response.cached_tokens # Tokens served from the provider's prompt cache (if supported) - v1.9.0+
 
-  logger.debug "Input Tokens: #{input_tokens}"
-  logger.debug "Output Tokens: #{output_tokens}"
-  logger.debug "Cached Prompt Tokens: #{cached_tokens}" if cached_tokens
-  logger.debug "Total Tokens for this turn: #{input_tokens + output_tokens}."
+  token_counts = agent.token_counts
+  logger.info "Token Usage Summary: #{token_counts.inspect}"
 
 rescue Interrupt
   puts "\nExecution interrupted by user."

@@ -4,7 +4,9 @@ module PlaywrightLLM
   class Agent
     Response = Struct.new(:content)
     MAX_TOTAL_TOOL_CALLS = 100
-    TRIMMING_THRESHOLD = 15
+    TRIMMING_THRESHOLD = 100
+
+    attr_reader :token_counts
 
     def initialize(rubyllm_chat: nil, provider: nil, model: nil, trimming_threshold: TRIMMING_THRESHOLD, max_total_tool_calls: MAX_TOTAL_TOOL_CALLS)
       @logger = PlaywrightLLM.logger
@@ -25,6 +27,7 @@ module PlaywrightLLM
       @total_tool_calls = 0
       @trimming_threshold = trimming_threshold
       @max_total_tool_calls = max_total_tool_calls
+      @token_counts = { input_tokens: 0, output_tokens: 0, cached_tokens: 0 }
     end
 
     def self.from_chat(rubyllm_chat:, trimming_threshold: TRIMMING_THRESHOLD, max_total_tool_calls: MAX_TOTAL_TOOL_CALLS)
@@ -74,7 +77,9 @@ module PlaywrightLLM
         stats = trim_messages
         Response.new({ success: "Messages trimmed", stats: stats })
       else
-        @chat.ask(prompt)
+        resp = @chat.ask(prompt)
+        @token_counts = read_token_counts(resp)
+        resp
       end
     end
 
@@ -90,6 +95,7 @@ module PlaywrightLLM
     end
 
     def trim_messages_if_needed
+      return if @trimming_threshold.nil? || @trimming_threshold <= 0
       max_messages = @trimming_threshold
       if @chat.messages.size > max_messages
         stats = trim_messages
@@ -160,6 +166,15 @@ module PlaywrightLLM
     end
 
     private
+
+    def read_token_counts(response)
+      return unless response.respond_to?(:input_tokens) && response.respond_to?(:output_tokens)
+      {
+        input_tokens: response.input_tokens,
+        output_tokens: response.output_tokens,
+        cached_tokens: response.cached_tokens
+      }
+    end
 
     def fix_tool_call(tool_call)
       @logger.debug "\n[Tool Call] #{tool_call.name}"
