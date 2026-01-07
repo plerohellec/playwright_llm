@@ -77,8 +77,8 @@ begin
   puts response.content
   puts "\n"
 
-  token_counts = agent.token_counts
-  logger.info "Token Usage Summary: #{token_counts.inspect}"
+  token_counts = agent.total_chat_tokens
+  logger.info "Total Token Usage Summary: #{token_counts.inspect}"
 
 rescue Interrupt
   puts "\nExecution interrupted by user."

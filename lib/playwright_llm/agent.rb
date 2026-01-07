@@ -165,6 +165,13 @@ module PlaywrightLLM
       @browser_tool.close if @browser_tool
     end
 
+    def total_chat_tokens
+      {
+        input: @chat.messages.sum { |msg| msg.input_tokens || 0 },
+        output: @chat.messages.sum { |msg| msg.output_tokens || 0 }
+      }
+    end
+
     private
 
     def read_token_counts(response)
