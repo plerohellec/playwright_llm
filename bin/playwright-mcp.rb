@@ -25,12 +25,24 @@ RubyLLM.configure do |config|
   config.logger = logger
 end
 
+# client = RubyLLM::MCP.client(
+#   name: "playwright-mcp",
+#   transport_type: :streamable,
+#   config: {
+#       url: "http://localhost:8931/mcp",
+#   },
+# )
+
+RubyLLM::MCP.configure do |config|
+  config.logger = logger
+end
+
 client = RubyLLM::MCP.client(
   name: "playwright-mcp",
-  transport_type: :streamable,
+  transport_type: :stdio,
   config: {
-      url: "http://localhost:8931/mcp",
-  },
+    command: 'npx @playwright/mcp@latest',
+  }
 )
 
 tools = client.tools
