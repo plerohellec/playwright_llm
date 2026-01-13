@@ -1,0 +1,5 @@
+Go to https://cloud.ionos.com/prices and extract a list of cloud services that IONOS offers (for example block storage, object storage or load balancer).
+Print the data in a json array. Each element of the array should have the following information:
+- name: the name of the service
+- url:  if you find a dedicated product page for this service, include its url here, leave null otherwise
+- description: a short description of the service, 25 words max.

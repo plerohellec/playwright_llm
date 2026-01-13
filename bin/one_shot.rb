@@ -8,6 +8,8 @@ require 'logger'
 require 'dotenv/load'
 require 'debug'
 
+RubyLLM.models.refresh!
+
 class LogFormatter
   TIME_FORMAT = '%H:%M:%S'
   def call(severity, datetime, progname, msg)
@@ -46,6 +48,17 @@ if prompt.empty?
   puts "Error: PROMPT is required"
   puts parser.help
   exit 1
+end
+
+if prompt =~ /^file:(.+)/
+  file_path = $1.strip
+  puts "Reading prompt from file: #{file_path}"
+  if File.exist?(file_path)
+    prompt = File.read(file_path)
+  else
+    puts "Error: File not found - #{file_path}"
+    exit 1
+  end
 end
 
 provider = options[:provider] || 'openrouter'
