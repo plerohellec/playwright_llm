@@ -40,6 +40,10 @@ parser = OptionParser.new do |opts|
   opts.on("--user-agent USER_AGENT", "Custom user agent string for Playwright") do |ua|
     options[:user_agent] = ua
   end
+
+  opts.on("--url URL", "-u URL", "URL to navigate to") do |url|
+    options[:url] = url
+  end
 end
 parser.parse!
 
@@ -59,6 +63,10 @@ if prompt =~ /^file:(.+)/
     puts "Error: File not found - #{file_path}"
     exit 1
   end
+end
+
+if options[:url]
+  prompt = "Go to #{options[:url]} to achieve your goals. #{prompt}"
 end
 
 provider = options[:provider] || 'openrouter'
