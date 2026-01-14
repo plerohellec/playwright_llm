@@ -27,9 +27,15 @@ if options[:url].nil? || options[:selector].nil?
   exit 1
 end
 
-logger = PlaywrightLLM.logger
+logger = Logger.new(STDOUT)
 
-browser = PlaywrightLLM::Browser.new(logger: logger)
+PlaywrightLLM.configure do |config|
+  config.logger = logger
+  config.headless = false
+end
+
+
+browser = PlaywrightLLM::Browser.new(logger: )
 res = browser.execute()
 
 unless res[:success]
